@@ -1,0 +1,182 @@
+{
+  "subjects": [
+    {
+      "Code": "PHY150",
+      "Name": "Physics",
+      "Exams": [
+        {
+          "Name": "Final Exam",
+          "Date": "Jan 17, 2026 @ 09:00",
+          "Retakes": [
+            "Jan 24, 2026 @ 09:00"
+          ],
+          "Priority": "HIGH"
+        },
+        {
+          "Name": "Test",
+          "Date": "Jan 14, 2026 @ 10:00",
+          "Retakes": [
+            "Jan 21, 2026 @ 10:00"
+          ],
+          "Priority": "MED"
+        }
+      ]
+    },
+    {
+      "Code": "HIST210",
+      "Name": "History",
+      "Exams": [
+        {
+          "Name": "Oral Exam",
+          "Date": "Jan 15, 2026 @ 14:00",
+          "Retakes": [
+            "Jan 22, 2026 @ 14:00"
+          ],
+          "Priority": "MED"
+        }
+      ]
+    },
+    {
+      "Code": "ENG102",
+      "Name": "English",
+      "Exams": [
+        {
+          "Name": "Listening Test",
+          "Date": "Jan 16, 2026 @ 11:30",
+          "Retakes": [
+            "Jan 23, 2026 @ 11:30"
+          ],
+          "Priority": "LOW"
+        }
+      ]
+    },
+    {
+      "Code": "CS101",
+      "Name": "Computer Science I",
+      "Exams": [
+        {
+          "Name": "Final Exam",
+          "Date": "Jan 13, 2026 @ 13:00",
+          "Retakes": [
+            "Jan 20, 2026 @ 13:00"
+          ],
+          "Priority": "HIGH"
+        }
+      ]
+    },
+    {
+      "Code": "MATH201",
+      "Name": "Calculus II",
+      "Exams": null
+    }
+  ],
+  "projects": [
+    {
+      "Name": "Renaissance Art Essay",
+      "Subject": "HIST210",
+      "Due": "May 28, 2025",
+      "Status": "NOT STARTED"
+    },
+    {
+      "Name": "Calculus Portfolio",
+      "Subject": "MATH201",
+      "Due": "Jun 10, 2025",
+      "Status": "NOT STARTED"
+    },
+    {
+      "Name": "Machine Learning Assignment",
+      "Subject": "CS101",
+      "Due": "Jun 18, 2025",
+      "Status": "NOT STARTED"
+    },
+    {
+      "Name": "Database Design Project",
+      "Subject": "CS101",
+      "Due": "May 20, 2025",
+      "Status": "IN PROGRESS"
+    },
+    {
+      "Name": "Physics Lab Simulation",
+      "Subject": "PHY150",
+      "Due": "Jun 3, 2025",
+      "Status": "DONE"
+    },
+    {
+      "Name": "English Literature Review",
+      "Subject": "ENG102",
+      "Due": "Jun 15, 2025",
+      "Status": "DONE"
+    }
+  ],
+  "checklist": [
+    {
+      "Text": "Submit physics lab report",
+      "Done": false,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Review weak areas in physics",
+      "Done": false,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Group meeting for CS project",
+      "Done": false,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Prepare oral exam notes",
+      "Done": false,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Summarize math key formulas",
+      "Done": false,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Attend study group session",
+      "Done": true,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Mock exam practice CS101",
+      "Done": true,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Review CS101 lectures 8-10",
+      "Done": true,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Complete MATH201 problem set 5",
+      "Done": true,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Read PHY150 chapter 12-13",
+      "Done": true,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Outline HIST210 essay",
+      "Done": true,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Practice ENG102 pronunciation",
+      "Done": true,
+      "Due": "2026-01-12"
+    },
+    {
+      "Text": "Work on database project",
+      "Done": true,
+      "Due": "2026-01-12"
+    }
+  ],
+  "weekly_exams": [],
+  "confirm_on": true,
+  "week_start": "2026-01-12",
+  "week_span": 1
+}
