@@ -17,7 +17,9 @@ func RenderMain(state State, width, height int, t style.Theme) string {
 	case 3:
 		return RenderProjectsTab(state, width, height, t)
 	case 4:
-		return RenderSettingsTab(width, height, state.ConfirmOn, state.WeekSpan, t)
+		return RenderSettingsTab(width, height, state.ConfirmOn, state.WeekSpan, state.LofiEnabled, state.LofiURL, t)
+	case 5:
+		return RenderLofi(state, width, height, t)
 	default:
 		return RenderPlaceholder(width, height, t)
 	}

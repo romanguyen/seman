@@ -9,12 +9,12 @@ import (
 	"student-exams-manager/internal/ui/components"
 )
 
-func RenderSettingsTab(width, height int, confirmOn bool, weekSpan int, t style.Theme) string {
+func RenderSettingsTab(width, height int, confirmOn bool, weekSpan int, lofiEnabled bool, lofiURL string, t style.Theme) string {
 	gap := 1
-	colWidth := (width - gap) / 2
-	rightWidth := width - colWidth - gap
-	if colWidth < 1 {
-		colWidth = width
+	leftWidth := (width - gap) / 2
+	rightWidth := width - leftWidth - gap
+	if leftWidth < 1 {
+		leftWidth = width
 		rightWidth = 0
 	}
 
@@ -25,26 +25,19 @@ func RenderSettingsTab(width, height int, confirmOn bool, weekSpan int, t style.
 		t.Text.Render("[C] Clear all data (CAUTION)"),
 	}, "\n")
 
-	displayContentW := components.PanelContentWidth(colWidth)
-	if rightWidth > 0 {
-		displayContentW = components.PanelContentWidth(rightWidth)
-	}
+	displayContentW := components.PanelContentWidth(leftWidth)
 	displayBody := strings.Join([]string{
 		components.AlignLine(displayContentW, t.Text.Render("Weeks visible: "+weekSpanLabel(weekSpan)), t.Text.Render("[W] Change")),
 		components.AlignLine(displayContentW, t.Text.Render("Date format: DD/MM/YYYY"), t.Text.Render("[F] Change")),
 		components.AlignLine(displayContentW, t.Text.Render("Time format: 24-hour"), t.Text.Render("[T] Toggle")),
 		components.AlignLine(displayContentW, t.Text.Render("Highlight urgent items: Yes"), t.Text.Render("[H] Toggle")),
 		components.AlignLine(displayContentW, t.Text.Render(fmt.Sprintf("Confirm deletions: %s", components.YesNo(confirmOn))), t.Text.Render("[O] Toggle")),
+		components.AlignLine(displayContentW, t.Text.Render(fmt.Sprintf("Lofi tab: %s", components.YesNo(lofiEnabled))), t.Text.Render("[L] Toggle")),
+		components.AlignLine(displayContentW, t.Text.Render("Lofi playlist: "+lofiURLLabel(lofiURL, displayContentW)), t.Text.Render("[U] Edit")),
 	}, "\n")
 
 	dataLines := strings.Count(dataBody, "\n") + 1 + 1
-	displayLines := strings.Count(displayBody, "\n") + 1 + 1
 	dataHeight := components.PanelHeightForLines(dataLines)
-	displayHeight := components.PanelHeightForLines(displayLines)
-	topRowHeight := dataHeight
-	if displayHeight > topRowHeight {
-		topRowHeight = displayHeight
-	}
 
 	priorityBody := strings.Join([]string{
 		t.Text.Render("HIGH priority if exam is within: 7 days"),
@@ -56,23 +49,25 @@ func RenderSettingsTab(width, height int, confirmOn bool, weekSpan int, t style.
 	priorityLines := strings.Count(priorityBody, "\n") + 1 + 1
 	priorityHeight := components.PanelHeightForLines(priorityLines)
 
-	totalHeight := topRowHeight + priorityHeight + gap
-	if extra := height - totalHeight; extra > 0 {
+	totalRightHeight := dataHeight + priorityHeight + gap
+	if extra := height - totalRightHeight; extra > 0 {
 		priorityHeight += extra
+	} else if extra < 0 {
+		priorityHeight += extra
+		if priorityHeight < 1 {
+			priorityHeight = 1
+		}
 	}
 
-	dataPanel := components.RenderPanel(colWidth, topRowHeight, "Data Management", dataBody, t)
-	var topRow string
-	if rightWidth > 0 {
-		displayPanel := components.RenderPanel(rightWidth, topRowHeight, "Display Options", displayBody, t)
-		topRow = lipgloss.JoinHorizontal(lipgloss.Top, dataPanel, " ", displayPanel)
-	} else {
-		topRow = dataPanel
+	displayPanel := components.RenderPanel(leftWidth, height, "Display Options", displayBody, t)
+	if rightWidth == 0 {
+		return displayPanel
 	}
+	dataPanel := components.RenderPanel(rightWidth, dataHeight, "Data Management", dataBody, t)
+	priorityPanel := components.RenderPanel(rightWidth, priorityHeight, "Priority Rules", priorityBody, t)
+	rightColumn := lipgloss.JoinVertical(lipgloss.Left, dataPanel, "", priorityPanel)
 
-	priorityPanel := components.RenderPanel(width, priorityHeight, "Priority Rules", priorityBody, t)
-
-	return lipgloss.JoinVertical(lipgloss.Left, topRow, "", priorityPanel)
+	return lipgloss.JoinHorizontal(lipgloss.Top, displayPanel, " ", rightColumn)
 }
 
 func weekSpanLabel(span int) string {
@@ -86,4 +81,16 @@ func weekSpanLabel(span int) string {
 	default:
 		return "1 week"
 	}
+}
+
+func lofiURLLabel(url string, width int) string {
+	label := strings.TrimSpace(url)
+	if label == "" {
+		label = "(not set)"
+	}
+	max := width - len("Lofi playlist: ")
+	if max < 1 {
+		max = 1
+	}
+	return components.TruncateString(label, max)
 }

@@ -1,18 +1,20 @@
 package components
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/lipgloss"
 	"student-exams-manager/internal/style"
 )
 
-func RenderFooter(width int, t style.Theme) string {
+func RenderFooter(width, tabCount int, t style.Theme) string {
 	contentWidth := width - barBorderX - barPaddingX*2
 	if contentWidth < 1 {
 		contentWidth = 1
 	}
 
 	left := t.FooterHint.Render("[A] Add exam  [S] Add subject  [P] Add project  [Q] Quit")
-	right := t.FooterHint.Render("[1-5] Switch tabs")
+	right := t.FooterHint.Render(fmt.Sprintf("[1-%d] Switch tabs", tabCount))
 	content := AlignLine(contentWidth, left, right)
 
 	styleWidth := width - barBorderX

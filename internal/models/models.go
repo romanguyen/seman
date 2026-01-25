@@ -25,3 +25,10 @@ type SubjectItem struct {
 	Name  string
 	Exams []ExamItem
 }
+
+type LofiTrack struct {
+	Title string
+	Note  string
+}
+
+const LofiVisibleCap = 8

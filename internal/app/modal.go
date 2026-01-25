@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
 	"student-exams-manager/internal/models"
 	"student-exams-manager/internal/style"
 )
@@ -22,6 +22,7 @@ const (
 	modalEditExam
 	modalEditProject
 	modalEditTodo
+	modalEditLofiURL
 	modalConfirm
 )
 
@@ -65,8 +66,9 @@ func (m Model) updateModal(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.modalError = err.Error()
 					return m, nil
 				}
+				cmd := m.consumeLofiReload()
 				m.closeModal()
-				return m, nil
+				return m, cmd
 			}
 			m.setFormFocus(m.formFocus + 1)
 			return m, nil
@@ -178,15 +180,15 @@ func (m *Model) openAddTodo() {
 
 func (m *Model) openEditCurrent() {
 	switch m.activeTab {
-	case 1:
+	case tabExams:
 		if m.semesterFocus == focusExams {
 			m.openEditExam()
 			return
 		}
 		m.openEditSubject()
-	case 2:
+	case tabTodos:
 		m.openEditTodo()
-	case 3:
+	case tabProjects:
 		m.openEditProject()
 	}
 }
@@ -261,6 +263,15 @@ func (m *Model) openEditTodo() {
 	fields[0].input.SetValue(item.Text)
 	m.editTodoIdx = m.checklistCursor
 	m.openFormModal(modalEditTodo, "Edit Todo", fields)
+}
+
+func (m *Model) openEditLofiURL() {
+	inputWidth := m.modalInputWidth()
+	fields := []formField{
+		newFormField("Playlist URL", inputWidth, true),
+	}
+	fields[0].input.SetValue(m.lofi.url)
+	m.openFormModal(modalEditLofiURL, "Edit Lofi Playlist", fields)
 }
 
 func (m *Model) openFormModal(kind modalKind, title string, fields []formField) {
@@ -425,6 +436,18 @@ func (m *Model) submitForm() error {
 		m.sortChecklistByDone()
 		m.persist()
 		m.refreshChecklistView()
+	case modalEditLofiURL:
+		url := strings.TrimSpace(m.formFields[0].input.Value())
+		if url == "" {
+			return fmt.Errorf("Playlist URL is required.")
+		}
+		m.lofi.url = url
+		m.lofiReload = true
+		m.persist()
+		if m.lofi.cmd != nil && m.lofi.status != lofiStatusStopped {
+			_ = m.sendLofiCommand("loadfile", m.lofi.url, "replace")
+			m.lofi.status = lofiStatusPlaying
+		}
 	}
 	return nil
 }
@@ -456,21 +479,21 @@ func splitCSV(raw string) []string {
 
 func (m *Model) queueDelete() {
 	switch m.activeTab {
-	case 1:
+	case tabExams:
 		if len(m.subjects) == 0 {
 			return
 		}
 		action := confirmAction{kind: confirmDeleteSubject, subjectIdx: m.selectedSubj}
 		message := fmt.Sprintf("Delete subject %s and its exams?", m.subjects[m.selectedSubj].Code)
 		m.confirmOrApply(action, message)
-	case 3:
+	case tabProjects:
 		if len(m.projects) == 0 {
 			return
 		}
 		action := confirmAction{kind: confirmDeleteProject, projectIdx: m.projectCursor}
 		message := fmt.Sprintf("Delete project %s?", m.projects[m.projectCursor].Name)
 		m.confirmOrApply(action, message)
-	case 2:
+	case tabTodos:
 		if len(m.checklistItems) == 0 || m.checklistCursor < 0 || m.checklistCursor >= len(m.checklistItems) {
 			return
 		}

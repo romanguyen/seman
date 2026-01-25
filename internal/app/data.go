@@ -93,5 +93,7 @@ func DefaultData() storage.SemesterData {
 		ConfirmOn:   true,
 		WeekStart:   "2026-01-12",
 		WeekSpan:    1,
+		LofiEnabled: false,
+		LofiURL:     "",
 	}
 }

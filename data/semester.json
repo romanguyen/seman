@@ -136,17 +136,17 @@
     },
     {
       "Text": "Attend study group session",
-      "Done": true,
+      "Done": false,
       "Due": "2026-01-12"
     },
     {
       "Text": "Mock exam practice CS101",
-      "Done": true,
+      "Done": false,
       "Due": "2026-01-12"
     },
     {
       "Text": "Review CS101 lectures 8-10",
-      "Done": true,
+      "Done": false,
       "Due": "2026-01-12"
     },
     {
@@ -178,5 +178,7 @@
   "weekly_exams": [],
   "confirm_on": true,
   "week_start": "2026-01-12",
-  "week_span": 1
+  "week_span": 1,
+  "lofi_enabled": true,
+  "lofi_url": "https://youtube.com/playlist?list=PLOzDu-MXXLlgKMA3S2FXY_XVyDrukc0si\u0026si=iuGuvTcNxpJL7Auh"
 }

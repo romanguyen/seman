@@ -8,12 +8,16 @@ import (
 	"student-exams-manager/internal/style"
 )
 
-func RenderTabs(active, width int, weekLabel string, t style.Theme) string {
-	labels := []string{"Dashboard", "Exams", "Todos", "Projects", "Settings"}
-	tabs := make([]string, 0, len(labels))
-	for i, label := range labels {
-		text := fmt.Sprintf("[%d] %s", i+1, label)
-		if i == active {
+type TabItem struct {
+	ID    int
+	Label string
+}
+
+func RenderTabs(active, width int, weekLabel string, items []TabItem, t style.Theme) string {
+	tabs := make([]string, 0, len(items))
+	for i, item := range items {
+		text := fmt.Sprintf("[%d] %s", i+1, item.Label)
+		if item.ID == active {
 			tabs = append(tabs, t.TabActive.Render(text))
 		} else {
 			tabs = append(tabs, t.TabInactive.Render(text))

@@ -10,6 +10,8 @@ type SemesterData struct {
 	ConfirmOn   bool                   `json:"confirm_on"`
 	WeekStart   string                 `json:"week_start"`
 	WeekSpan    int                    `json:"week_span"`
+	LofiEnabled bool                   `json:"lofi_enabled"`
+	LofiURL     string                 `json:"lofi_url"`
 }
 
 type Store interface {

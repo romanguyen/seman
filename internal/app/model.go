@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
 	"student-exams-manager/internal/models"
 	"student-exams-manager/internal/storage"
 	"student-exams-manager/internal/style"
@@ -15,37 +15,44 @@ import (
 )
 
 type Model struct {
-	width          int
-	height         int
-	activeTab      int
-	checklist      viewport.Model
-	checklistItems []models.ChecklistItem
+	width           int
+	height          int
+	activeTab       int
+	checklist       viewport.Model
+	checklistItems  []models.ChecklistItem
 	checklistCursor int
-	todoVisible    []int
-	projects       []models.ProjectItem
-	subjects       []models.SubjectItem
-	selectedSubj   int
-	examCursor     int
-	examVisible    []int
-	semesterFocus  semesterFocus
-	weekLabel      string
-	weekStart      time.Time
-	weeklyExams    []string
-	projectCursor  int
-	confirmOn      bool
-	weekSpan       int
-	modal          modalKind
-	formFields     []formField
-	formFocus      int
-	modalTitle     string
-	modalHint      string
-	modalError     string
-	confirmAction  confirmAction
-	editSubjectIdx int
-	editExamIdx    int
-	editProjectIdx int
-	editTodoIdx    int
-	store          storage.Store
+	todoVisible     []int
+	projects        []models.ProjectItem
+	subjects        []models.SubjectItem
+	selectedSubj    int
+	examCursor      int
+	examVisible     []int
+	semesterFocus   semesterFocus
+	weekLabel       string
+	weekStart       time.Time
+	weeklyExams     []string
+	projectCursor   int
+	confirmOn       bool
+	weekSpan        int
+	lofi            lofiState
+	lofiPlaylist    []models.LofiTrack
+	lofiCursor      int
+	lofiOffset      int
+	lofiListHeight  int
+	lofiNow         int
+	lofiReload      bool
+	modal           modalKind
+	formFields      []formField
+	formFocus       int
+	modalTitle      string
+	modalHint       string
+	modalError      string
+	confirmAction   confirmAction
+	editSubjectIdx  int
+	editExamIdx     int
+	editProjectIdx  int
+	editTodoIdx     int
+	store           storage.Store
 }
 
 type semesterFocus int
@@ -55,13 +62,22 @@ const (
 	focusExams
 )
 
+const (
+	tabDashboard = iota
+	tabExams
+	tabTodos
+	tabProjects
+	tabSettings
+	tabLofi
+)
+
 func NewModel(store storage.Store, data storage.SemesterData, hasData bool) Model {
 	if !hasData {
 		data = DefaultData()
 	}
 	vp := viewport.New(0, 0)
 	m := Model{
-		activeTab:      0,
+		activeTab:      tabDashboard,
 		checklist:      vp,
 		selectedSubj:   0,
 		examCursor:     0,
@@ -71,13 +87,18 @@ func NewModel(store storage.Store, data storage.SemesterData, hasData bool) Mode
 		editExamIdx:    -1,
 		editProjectIdx: -1,
 		editTodoIdx:    -1,
+		lofiNow:        -1,
 		store:          store,
 	}
+	m.lofiPlaylist = defaultLofiPlaylist()
 	m.applyData(data)
 	return m
 }
 
 func (m Model) Init() tea.Cmd {
+	if m.lofi.enabled && strings.TrimSpace(m.lofi.url) != "" {
+		return loadLofiPlaylist(m.lofi.url)
+	}
 	return nil
 }
 
@@ -86,18 +107,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.resize(msg.Width, msg.Height)
 		return m, nil
+	case lofiExitMsg:
+		m.handleLofiExit(msg)
+		return m, nil
+	case lofiPlaylistMsg:
+		m.applyLofiPlaylist(msg)
+		return m, nil
+	case lofiIndexMsg:
+		cmd := m.applyLofiIndex(msg)
+		return m, cmd
+	case lofiPlaybackMsg:
+		cmd := m.applyLofiPlayback(msg)
+		return m, cmd
 	case tea.KeyMsg:
 		key := msg.String()
 		if m.modal != modalNone {
 			return m.updateModal(msg)
 		}
+		if len(key) == 1 && key[0] >= '1' && key[0] <= '9' {
+			if m.switchToTab(int(key[0] - '1')) {
+				return m, nil
+			}
+		}
 		switch key {
 		case "ctrl+c", "q":
+			m.shutdownLofi()
 			return m, tea.Quit
-		case "1", "2", "3", "4", "5":
-			m.activeTab = int(key[0] - '1')
-			m.resize(m.width, m.height)
-			return m, nil
 		case "left":
 			m.shiftWeek(-1)
 			return m, nil
@@ -117,7 +152,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.openEditCurrent()
 			return m, nil
 		case "n", "N":
-			if m.activeTab == 2 {
+			if m.activeTab == tabTodos {
 				m.openAddTodo()
 				return m, nil
 			}
@@ -125,24 +160,34 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.queueDelete()
 			return m, nil
 		case "c", "C":
-			if m.activeTab == 4 {
+			if m.activeTab == tabSettings {
 				m.queueClearAll()
 				return m, nil
 			}
 		case "o", "O":
-			if m.activeTab == 4 {
+			if m.activeTab == tabSettings {
 				m.confirmOn = !m.confirmOn
 				m.persist()
 				return m, nil
 			}
 		case "w", "W":
-			if m.activeTab == 4 {
+			if m.activeTab == tabSettings {
 				m.cycleWeekSpan()
+				return m, nil
+			}
+		case "l", "L":
+			if m.activeTab == tabSettings {
+				cmd := m.toggleLofiEnabled()
+				return m, cmd
+			}
+		case "u", "U":
+			if m.activeTab == tabSettings || m.activeTab == tabLofi {
+				m.openEditLofiURL()
 				return m, nil
 			}
 		}
 
-		if m.activeTab == 2 {
+		if m.activeTab == tabTodos {
 			switch key {
 			case "j", "down":
 				m.moveChecklistCursor(1)
@@ -166,7 +211,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
-		if m.activeTab == 0 {
+		if m.activeTab == tabDashboard {
 			switch key {
 			case "j", "down":
 				m.checklist.LineDown(1)
@@ -187,7 +232,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
-		if m.activeTab == 1 {
+		if m.activeTab == tabExams {
 			switch key {
 			case "tab":
 				m.toggleSemesterFocus()
@@ -201,7 +246,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		if m.activeTab == 3 {
+		if m.activeTab == tabProjects {
 			switch key {
 			case "j", "down":
 				if m.projectCursor < len(m.projects)-1 {
@@ -212,6 +257,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.projectCursor > 0 {
 					m.projectCursor--
 				}
+				return m, nil
+			}
+		}
+
+		if m.activeTab == tabLofi {
+			switch key {
+			case "j", "down":
+				m.moveLofiCursor(1)
+				return m, nil
+			case "k", "up":
+				m.moveLofiCursor(-1)
+				return m, nil
+			case "enter":
+				cmd := m.playLofiAt(m.lofiCursor)
+				return m, cmd
+			case " ":
+				cmd := m.toggleLofiPlayPause()
+				return m, cmd
+			case "n", "N":
+				cmd := m.lofiNext()
+				return m, cmd
+			case "b", "B":
+				cmd := m.lofiPrev()
+				return m, cmd
+			case "x", "X":
+				m.lofiStop()
 				return m, nil
 			}
 		}
@@ -227,7 +298,7 @@ func (m Model) View() string {
 
 	t := style.NewTheme()
 	header := components.RenderHeader(m.width, t)
-	tabs := components.RenderTabs(m.activeTab, m.width, m.weekLabel, t)
+	tabs := components.RenderTabs(m.activeTab, m.width, m.weekLabel, m.tabItems(), t)
 	divider := components.RenderDivider(m.width, t)
 	mainHeight := components.MainAreaHeight(m.height)
 	state := m.viewState()
@@ -235,7 +306,7 @@ func (m Model) View() string {
 	if state.Modal.Mode != components.ModalHidden {
 		main = screens.RenderModal(state, m.width, mainHeight, t)
 	}
-	footer := components.RenderFooter(m.width, t)
+	footer := components.RenderFooter(m.width, len(m.tabItems()), t)
 
 	return strings.Join([]string{header, tabs, divider, main, divider, footer}, "\n")
 }
@@ -246,18 +317,20 @@ func (m *Model) resize(width, height int) {
 
 	mainHeight := components.MainAreaHeight(height)
 	switch m.activeTab {
-	case 0:
+	case tabDashboard:
 		layout := components.ComputeDashboardLayout(width, mainHeight)
 		if layout.ChecklistWidth > 0 && layout.ChecklistHeight > 0 {
 			m.checklist.Width = layout.ChecklistWidth
 			m.checklist.Height = layout.ChecklistHeight
 		}
-	case 2:
+	case tabTodos:
 		layout := components.ComputeWeeklyLayout(width, mainHeight)
 		if layout.ActionsWidth > 0 && layout.ActionsHeight > 0 {
 			m.checklist.Width = layout.ActionsWidth
 			m.checklist.Height = layout.ActionsHeight
 		}
+	case tabLofi:
+		m.resizeLofi(width, mainHeight)
 	}
 	m.refreshChecklistView()
 }
@@ -270,6 +343,10 @@ func (m *Model) applyData(data storage.SemesterData) {
 	m.confirmOn = data.ConfirmOn
 	m.setWeekSpanFromData(data.WeekSpan)
 	m.setWeekStartFromData(data.WeekStart)
+	m.lofi.enabled = data.LofiEnabled
+	m.lofi.url = strings.TrimSpace(data.LofiURL)
+	m.lofi.status = lofiStatusStopped
+	m.lofi.err = ""
 	m.ensureTodoDueDates()
 	m.sortExamsByPriority()
 	m.sortProjectsByStatus()
@@ -290,6 +367,19 @@ func (m *Model) applyData(data storage.SemesterData) {
 		m.projectCursor = 0
 	}
 	m.refreshExamFilter()
+	if m.lofiNow >= len(m.lofiPlaylist) {
+		m.lofiNow = len(m.lofiPlaylist) - 1
+	}
+	if m.lofiNow < 0 && len(m.lofiPlaylist) > 0 {
+		m.lofiNow = 0
+	}
+	if m.lofiCursor >= len(m.lofiPlaylist) {
+		m.lofiCursor = len(m.lofiPlaylist) - 1
+	}
+	if m.lofiCursor < 0 && len(m.lofiPlaylist) > 0 {
+		m.lofiCursor = 0
+	}
+	m.ensureLofiVisible()
 }
 
 func (m Model) exportData() storage.SemesterData {
@@ -301,6 +391,8 @@ func (m Model) exportData() storage.SemesterData {
 		ConfirmOn:   m.confirmOn,
 		WeekStart:   m.weekStart.Format("2006-01-02"),
 		WeekSpan:    m.weekSpan,
+		LofiEnabled: m.lofi.enabled,
+		LofiURL:     m.lofi.url,
 	}
 }
 
@@ -321,7 +413,7 @@ func (m *Model) refreshChecklistView() {
 		}
 	}
 	visibleCursor := m.visibleIndex(m.todoVisible, m.checklistCursor)
-	m.checklist.SetContent(components.RenderChecklist(filtered, visibleCursor, m.activeTab == 2, t))
+	m.checklist.SetContent(components.RenderChecklist(filtered, visibleCursor, m.activeTab == tabTodos, t))
 	m.ensureChecklistVisible(visibleCursor, len(filtered))
 }
 
@@ -578,6 +670,14 @@ func (m Model) viewState() screens.State {
 		WeekSpan:      m.weekSpan,
 		WeeklyExams:   m.weeklyExams,
 		ProjectCursor: m.projectCursor,
+		LofiEnabled:   m.lofi.enabled,
+		LofiURL:       m.lofi.url,
+		LofiStatus:    m.lofi.status,
+		LofiError:     m.lofi.err,
+		LofiPlaylist:  m.lofiPlaylist,
+		LofiCursor:    m.lofiCursor,
+		LofiOffset:    m.lofiOffset,
+		LofiNow:       m.lofiNow,
 	}
 
 	if m.modal == modalNone {
@@ -776,4 +876,67 @@ func (m *Model) toggleSemesterFocus() {
 		return
 	}
 	m.semesterFocus = focusSubjects
+}
+
+func (m Model) tabItems() []components.TabItem {
+	items := []components.TabItem{
+		{ID: tabDashboard, Label: "Dashboard"},
+		{ID: tabExams, Label: "Exams"},
+		{ID: tabTodos, Label: "Todos"},
+		{ID: tabProjects, Label: "Projects"},
+		{ID: tabSettings, Label: "Settings"},
+	}
+	if m.lofi.enabled {
+		items = append(items, components.TabItem{ID: tabLofi, Label: "Lofi"})
+	}
+	return items
+}
+
+func (m *Model) switchToTab(index int) bool {
+	items := m.tabItems()
+	if index < 0 || index >= len(items) {
+		return false
+	}
+	m.activeTab = items[index].ID
+	m.resize(m.width, m.height)
+	return true
+}
+
+func (m *Model) consumeLofiReload() tea.Cmd {
+	if !m.lofiReload {
+		return nil
+	}
+	m.lofiReload = false
+	if strings.TrimSpace(m.lofi.url) == "" {
+		return nil
+	}
+	return loadLofiPlaylist(m.lofi.url)
+}
+
+func (m *Model) resizeLofi(width, height int) {
+	gap := 1
+	available := width - gap
+	if available < 1 {
+		available = width
+		gap = 0
+	}
+	leftWidth := available / 2
+	rightWidth := available - leftWidth
+	if leftWidth < 1 {
+		leftWidth = available
+		rightWidth = 0
+	}
+	playlistWidth := rightWidth
+	if rightWidth == 0 {
+		m.lofiListHeight = 0
+		m.lofiOffset = 0
+		return
+	}
+
+	_, contentH := components.PanelContentSize(playlistWidth, height)
+	if contentH < 1 {
+		contentH = 1
+	}
+	m.lofiListHeight = contentH
+	m.ensureLofiVisible()
 }
