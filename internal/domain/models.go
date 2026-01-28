@@ -1,4 +1,4 @@
-package models
+package domain
 
 type ChecklistItem struct {
 	Text string
@@ -32,3 +32,15 @@ type LofiTrack struct {
 }
 
 const LofiVisibleCap = 8
+
+const (
+	PriorityHigh = "HIGH"
+	PriorityMed  = "MED"
+	PriorityLow  = "LOW"
+)
+
+const (
+	ProjectStatusNotStarted = "NOT STARTED"
+	ProjectStatusInProgress = "IN PROGRESS"
+	ProjectStatusDone       = "DONE"
+)

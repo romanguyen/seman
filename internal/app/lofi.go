@@ -12,7 +12,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/models"
+	"student-exams-manager/internal/domain"
 )
 
 const (
@@ -36,7 +36,7 @@ type lofiExitMsg struct {
 }
 
 type lofiPlaylistMsg struct {
-	tracks []models.LofiTrack
+	tracks []domain.LofiTrack
 	err    error
 }
 
@@ -50,8 +50,8 @@ type lofiPlaybackMsg struct {
 	err      error
 }
 
-func defaultLofiPlaylist() []models.LofiTrack {
-	return []models.LofiTrack{
+func defaultLofiPlaylist() []domain.LofiTrack {
+	return []domain.LofiTrack{
 		{Title: "Lofi Hip Hop Radio - Beats to Study/Relax", Note: "Classic lofi beats"},
 		{Title: "ChillHop Radio - Jazzy & Lofi Hip Hop", Note: "Smooth jazzy lofi"},
 		{Title: "Lofi Girl - Sleep/Chill Radio", Note: "Calm beats for sleeping"},
@@ -79,6 +79,17 @@ func (m *Model) toggleLofiEnabled() tea.Cmd {
 		return loadLofiPlaylist(m.lofi.url)
 	}
 	return nil
+}
+
+func (m *Model) consumeLofiReload() tea.Cmd {
+	if !m.lofiReload {
+		return nil
+	}
+	m.lofiReload = false
+	if strings.TrimSpace(m.lofi.url) == "" {
+		return nil
+	}
+	return loadLofiPlaylist(m.lofi.url)
 }
 
 func (m *Model) moveLofiCursor(delta int) {
@@ -140,7 +151,7 @@ func (m *Model) ensureLofiVisible() {
 		m.lofiOffset = 0
 		return
 	}
-	maxLines := models.LofiVisibleCap*2 - 1
+	maxLines := domain.LofiVisibleCap*2 - 1
 	if visible > maxLines {
 		visible = maxLines
 	}
@@ -394,6 +405,9 @@ func (m *Model) validateLofi() error {
 	if strings.TrimSpace(m.lofi.url) == "" {
 		return fmt.Errorf("Set a playlist URL in Settings.")
 	}
+	if _, err := exec.LookPath("mpv"); err != nil {
+		return fmt.Errorf("mpv not found. Install mpv to enable Lofi playback.")
+	}
 	return nil
 }
 
@@ -416,7 +430,10 @@ type ytPlaylist struct {
 	} `json:"entries"`
 }
 
-func fetchLofiPlaylist(url string) ([]models.LofiTrack, error) {
+func fetchLofiPlaylist(url string) ([]domain.LofiTrack, error) {
+	if _, err := exec.LookPath("yt-dlp"); err != nil {
+		return nil, fmt.Errorf("yt-dlp not found. Install yt-dlp to load playlists.")
+	}
 	cmd := exec.Command("yt-dlp", "--flat-playlist", "-J", url)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -429,7 +446,7 @@ func fetchLofiPlaylist(url string) ([]models.LofiTrack, error) {
 	if len(payload.Entries) == 0 {
 		return nil, fmt.Errorf("Playlist is empty.")
 	}
-	tracks := make([]models.LofiTrack, 0, len(payload.Entries))
+	tracks := make([]domain.LofiTrack, 0, len(payload.Entries))
 	for _, entry := range payload.Entries {
 		title := strings.TrimSpace(entry.Title)
 		if title == "" {
@@ -439,7 +456,7 @@ func fetchLofiPlaylist(url string) ([]models.LofiTrack, error) {
 		if note == "" {
 			note = strings.TrimSpace(entry.Channel)
 		}
-		tracks = append(tracks, models.LofiTrack{Title: title, Note: note})
+		tracks = append(tracks, domain.LofiTrack{Title: title, Note: note})
 	}
 	if len(tracks) == 0 {
 		return nil, fmt.Errorf("Playlist is empty.")

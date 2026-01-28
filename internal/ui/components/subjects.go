@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"student-exams-manager/internal/models"
+	"student-exams-manager/internal/domain"
 	"student-exams-manager/internal/style"
 )
 
-func RenderSubjects(items []models.SubjectItem, selected int, t style.Theme) string {
+func RenderSubjects(items []domain.SubjectItem, selected int, t style.Theme) string {
 	if len(items) == 0 {
 		return t.Dim.Render("No subjects yet")
 	}
@@ -35,7 +35,7 @@ func RenderSubjects(items []models.SubjectItem, selected int, t style.Theme) str
 	return b.String()
 }
 
-func RenderSubjectTitle(items []models.SubjectItem, selected int, t style.Theme) string {
+func RenderSubjectTitle(items []domain.SubjectItem, selected int, t style.Theme) string {
 	if selected < 0 || selected >= len(items) {
 		return ""
 	}
@@ -44,7 +44,7 @@ func RenderSubjectTitle(items []models.SubjectItem, selected int, t style.Theme)
 	return t.Title.Render(title)
 }
 
-func RenderExamList(exams []models.ExamItem, examIdx int, highlight bool, t style.Theme) string {
+func RenderExamList(exams []domain.ExamItem, examIdx int, highlight bool, t style.Theme) string {
 	if len(exams) == 0 {
 		return t.Dim.Render("No exams this week")
 	}

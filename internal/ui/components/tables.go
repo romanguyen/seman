@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"student-exams-manager/internal/models"
+	"student-exams-manager/internal/domain"
 	"student-exams-manager/internal/style"
 )
 
-func RenderProjectsTable(items []models.ProjectItem, selected, width int, t style.Theme) string {
+func RenderProjectsTable(items []domain.ProjectItem, selected, width int, t style.Theme) string {
 	if width <= 0 {
 		return ""
 	}

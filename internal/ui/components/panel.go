@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"student-exams-manager/internal/style"
+	"student-exams-manager/internal/ui/layout"
 )
 
 func RenderPanel(width, height int, title, body string, t style.Theme) string {
@@ -13,9 +14,9 @@ func RenderPanel(width, height int, title, body string, t style.Theme) string {
 		return ""
 	}
 
-	contentW, _ := PanelContentSize(width, height)
-	styleW := width - panelBorderX
-	styleH := height - panelBorderY
+	contentW, _ := layout.PanelContentSize(width, height)
+	styleW := width - layout.PanelBorderX
+	styleH := height - layout.PanelBorderY
 	if styleW < 1 {
 		styleW = 1
 	}
@@ -26,7 +27,7 @@ func RenderPanel(width, height int, title, body string, t style.Theme) string {
 	box := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
 		BorderForeground(t.Border).
-		Padding(panelPaddingY, panelPaddingX).
+		Padding(layout.PanelPaddingY, layout.PanelPaddingX).
 		Width(styleW).
 		Height(styleH)
 

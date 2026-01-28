@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"student-exams-manager/internal/models"
+	"student-exams-manager/internal/domain"
 	"student-exams-manager/internal/style"
 )
 
@@ -17,7 +17,7 @@ type upcomingExam struct {
 	Date     time.Time
 }
 
-func RenderUpcomingExams(subjects []models.SubjectItem, limit int, start, end time.Time, all bool, t style.Theme) string {
+func RenderUpcomingExams(subjects []domain.SubjectItem, limit int, start, end time.Time, all bool, t style.Theme) string {
 	exams := collectUpcomingExams(subjects, start, end, all)
 	if len(exams) == 0 {
 		return t.Dim.Render("No exams this week")
@@ -50,11 +50,11 @@ func RenderUpcomingExams(subjects []models.SubjectItem, limit int, start, end ti
 	return b.String()
 }
 
-func collectUpcomingExams(subjects []models.SubjectItem, start, end time.Time, all bool) []upcomingExam {
+func collectUpcomingExams(subjects []domain.SubjectItem, start, end time.Time, all bool) []upcomingExam {
 	list := make([]upcomingExam, 0)
 	for _, subject := range subjects {
 		for _, exam := range subject.Exams {
-			date, ok := parseExamDate(exam.Date)
+			date, ok := domain.ParseExamDate(exam.Date)
 			if !ok {
 				continue
 			}
@@ -76,26 +76,7 @@ func collectUpcomingExams(subjects []models.SubjectItem, start, end time.Time, a
 	return list
 }
 
-func parseExamDate(value string) (time.Time, bool) {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return time.Time{}, false
-	}
-	layouts := []string{
-		"Jan 2, 2006 @ 15:04",
-		"Jan 2, 2006",
-		"2006-01-02 15:04",
-		"2006-01-02",
-	}
-	for _, layout := range layouts {
-		if t, err := time.ParseInLocation(layout, value, time.Local); err == nil {
-			return t, true
-		}
-	}
-	return time.Time{}, false
-}
-
-func RenderChecklist(items []models.ChecklistItem, selected int, showCursor bool, t style.Theme) string {
+func RenderChecklist(items []domain.ChecklistItem, selected int, showCursor bool, t style.Theme) string {
 	var b strings.Builder
 	for i, item := range items {
 		if i > 0 {
@@ -116,7 +97,7 @@ func RenderChecklist(items []models.ChecklistItem, selected int, showCursor bool
 	return b.String()
 }
 
-func RenderProjects(items []models.ProjectItem, t style.Theme) string {
+func RenderProjects(items []domain.ProjectItem, t style.Theme) string {
 	var b strings.Builder
 	for i, item := range items {
 		if i > 0 {

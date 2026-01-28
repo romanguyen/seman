@@ -1,0 +1,79 @@
+package app
+
+import (
+	"strings"
+
+	"student-exams-manager/internal/storage"
+)
+
+func (m *Model) applyData(data storage.SemesterData) {
+	m.subjects = data.Subjects
+	m.projects = data.Projects
+	m.checklistItems = data.Checklist
+	m.weeklyExams = data.WeeklyExams
+	m.confirmOn = data.ConfirmOn
+	m.setWeekSpanFromData(data.WeekSpan)
+	m.setWeekStartFromData(data.WeekStart)
+	m.lofi.enabled = data.LofiEnabled
+	m.lofi.url = strings.TrimSpace(data.LofiURL)
+	m.lofi.status = lofiStatusStopped
+	m.lofi.err = ""
+	m.ensureTodoDueDates()
+	m.sortExamsByPriority()
+	m.sortProjectsByStatus()
+	m.sortChecklistByDone()
+	m.refreshExamFilter()
+	m.refreshChecklistView()
+
+	if m.selectedSubj >= len(m.subjects) {
+		m.selectedSubj = len(m.subjects) - 1
+	}
+	if m.selectedSubj < 0 {
+		m.selectedSubj = 0
+	}
+	if m.projectCursor >= len(m.projects) {
+		m.projectCursor = len(m.projects) - 1
+	}
+	if m.projectCursor < 0 {
+		m.projectCursor = 0
+	}
+	m.refreshExamFilter()
+	if m.lofiNow >= len(m.lofiPlaylist) {
+		m.lofiNow = len(m.lofiPlaylist) - 1
+	}
+	if m.lofiNow < 0 && len(m.lofiPlaylist) > 0 {
+		m.lofiNow = 0
+	}
+	if m.lofiCursor >= len(m.lofiPlaylist) {
+		m.lofiCursor = len(m.lofiPlaylist) - 1
+	}
+	if m.lofiCursor < 0 && len(m.lofiPlaylist) > 0 {
+		m.lofiCursor = 0
+	}
+	m.ensureLofiVisible()
+}
+
+func (m Model) exportData() storage.SemesterData {
+	return storage.SemesterData{
+		Subjects:    m.subjects,
+		Projects:    m.projects,
+		Checklist:   m.checklistItems,
+		WeeklyExams: m.weeklyExams,
+		ConfirmOn:   m.confirmOn,
+		WeekStart:   m.weekStart.Format("2006-01-02"),
+		WeekSpan:    m.weekSpan,
+		LofiEnabled: m.lofi.enabled,
+		LofiURL:     m.lofi.url,
+	}
+}
+
+func (m *Model) persist() {
+	if m.store == nil {
+		return
+	}
+	if err := m.store.Save(m.exportData()); err != nil {
+		m.saveError = "Save failed: " + err.Error()
+		return
+	}
+	m.saveError = ""
+}

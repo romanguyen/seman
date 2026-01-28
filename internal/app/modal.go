@@ -6,8 +6,9 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/models"
+	"student-exams-manager/internal/domain"
 	"student-exams-manager/internal/style"
+	"student-exams-manager/internal/ui/layout"
 )
 
 type modalKind int
@@ -307,7 +308,7 @@ func (m *Model) submitForm() error {
 		if code == "" || name == "" {
 			return fmt.Errorf("Code and Name are required.")
 		}
-		m.subjects = append(m.subjects, models.SubjectItem{Code: code, Name: name})
+		m.subjects = append(m.subjects, domain.SubjectItem{Code: code, Name: name})
 		m.selectedSubj = len(m.subjects) - 1
 		m.persist()
 	case modalAddExam:
@@ -324,7 +325,7 @@ func (m *Model) submitForm() error {
 			return fmt.Errorf("Subject code not found.")
 		}
 		retakes := splitCSV(retakesRaw)
-		m.subjects[idx].Exams = append(m.subjects[idx].Exams, models.ExamItem{
+		m.subjects[idx].Exams = append(m.subjects[idx].Exams, domain.ExamItem{
 			Name:     examName,
 			Date:     date,
 			Retakes:  retakes,
@@ -343,9 +344,9 @@ func (m *Model) submitForm() error {
 			return fmt.Errorf("Name, Subject, and Deadline are required.")
 		}
 		if status == "" {
-			status = "NOT STARTED"
+			status = domain.ProjectStatusNotStarted
 		}
-		m.projects = append(m.projects, models.ProjectItem{
+		m.projects = append(m.projects, domain.ProjectItem{
 			Name:    name,
 			Subject: subject,
 			Due:     deadline,
@@ -359,7 +360,7 @@ func (m *Model) submitForm() error {
 		if task == "" {
 			return fmt.Errorf("Task is required.")
 		}
-		m.checklistItems = append(m.checklistItems, models.ChecklistItem{
+		m.checklistItems = append(m.checklistItems, domain.ChecklistItem{
 			Text: task,
 			Done: false,
 			Due:  m.weekStart.Format("2006-01-02"),
@@ -415,7 +416,7 @@ func (m *Model) submitForm() error {
 			return fmt.Errorf("Name, Subject, and Deadline are required.")
 		}
 		if status == "" {
-			status = "NOT STARTED"
+			status = domain.ProjectStatusNotStarted
 		}
 		m.projects[m.editProjectIdx].Name = name
 		m.projects[m.editProjectIdx].Subject = subject
@@ -452,7 +453,7 @@ func (m *Model) submitForm() error {
 	return nil
 }
 
-func findSubjectIndex(items []models.SubjectItem, code string) int {
+func findSubjectIndex(items []domain.SubjectItem, code string) int {
 	code = strings.ToUpper(strings.TrimSpace(code))
 	for i, item := range items {
 		if strings.ToUpper(item.Code) == code {
@@ -569,23 +570,9 @@ func (m *Model) applyConfirmAction() {
 }
 
 func (m Model) modalInputWidth() int {
-	modalW := minInt(70, m.width-6)
+	modalW := layout.MinInt(70, m.width-6)
 	if modalW < 42 {
 		modalW = 42
 	}
-	return maxInt(12, modalW-18)
-}
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func maxInt(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
+	return layout.MaxInt(12, modalW-18)
 }
