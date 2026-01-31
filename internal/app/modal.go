@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -292,7 +293,7 @@ func newFormField(label string, width int, required bool) formField {
 	t := style.NewTheme()
 	input.TextStyle = t.InputText
 	input.PlaceholderStyle = t.InputHint
-	input.CursorStyle = t.InputCursor
+	input.Cursor.Style = t.InputCursor
 	return formField{
 		label:    label,
 		input:    input,
@@ -310,7 +311,7 @@ func (m *Model) formValue(idx int) string {
 func parseStrictDateOrError(value, message string) (string, error) {
 	parsed, ok := domain.ParseStrictDate(value)
 	if !ok {
-		return "", fmt.Errorf(message)
+		return "", errors.New(message)
 	}
 	return domain.FormatDate(parsed), nil
 }
@@ -329,7 +330,7 @@ func parseRetakesOrError(raw string) ([]string, error) {
 
 func (m *Model) saveSubject(idx int, code, name string) error {
 	if code == "" || name == "" {
-		return fmt.Errorf("Code and Name are required.")
+		return fmt.Errorf("code and name are required")
 	}
 	if idx < 0 {
 		m.subjects = append(m.subjects, domain.SubjectItem{Code: code, Name: name})
@@ -348,15 +349,15 @@ func (m *Model) saveSubject(idx int, code, name string) error {
 
 func (m *Model) addExam(subjectCode, examName, date, retakesRaw, priority string) error {
 	if subjectCode == "" || examName == "" || date == "" {
-		return fmt.Errorf("Subject, Exam Name, and Date are required.")
+		return fmt.Errorf("subject, exam name, and date are required")
 	}
-	parsedDate, err := parseStrictDateOrError(date, "Date must be DD/MM/YYYY.")
+	parsedDate, err := parseStrictDateOrError(date, "date must be DD/MM/YYYY")
 	if err != nil {
 		return err
 	}
 	idx := findSubjectIndex(m.subjects, subjectCode)
 	if idx < 0 {
-		return fmt.Errorf("Subject code not found.")
+		return fmt.Errorf("subject code not found")
 	}
 	retakes, err := parseRetakesOrError(retakesRaw)
 	if err != nil {
@@ -384,9 +385,9 @@ func (m *Model) updateExam(subjectIdx, examIdx int, examName, date, retakesRaw, 
 		return nil
 	}
 	if examName == "" || date == "" {
-		return fmt.Errorf("Exam Name and Date are required.")
+		return fmt.Errorf("exam name and date are required")
 	}
-	parsedDate, err := parseStrictDateOrError(date, "Date must be DD/MM/YYYY.")
+	parsedDate, err := parseStrictDateOrError(date, "date must be DD/MM/YYYY")
 	if err != nil {
 		return err
 	}
@@ -407,9 +408,9 @@ func (m *Model) updateExam(subjectIdx, examIdx int, examName, date, retakesRaw, 
 
 func (m *Model) saveProject(idx int, name, subject, deadline, status string) error {
 	if name == "" || subject == "" || deadline == "" {
-		return fmt.Errorf("Name, Subject, and Deadline are required.")
+		return fmt.Errorf("name, subject, and deadline are required")
 	}
-	parsedDeadline, err := parseStrictDateOrError(deadline, "Deadline must be DD/MM/YYYY.")
+	parsedDeadline, err := parseStrictDateOrError(deadline, "deadline must be DD/MM/YYYY")
 	if err != nil {
 		return err
 	}
@@ -442,12 +443,12 @@ func (m *Model) saveProject(idx int, name, subject, deadline, status string) err
 
 func (m *Model) saveTodo(idx int, task, due string) error {
 	if task == "" {
-		return fmt.Errorf("Task is required.")
+		return fmt.Errorf("task is required")
 	}
 	if due == "" {
-		return fmt.Errorf("Due date is required.")
+		return fmt.Errorf("due date is required")
 	}
-	parsedDue, err := parseStrictDateOrError(due, "Due date must be DD/MM/YYYY.")
+	parsedDue, err := parseStrictDateOrError(due, "due date must be DD/MM/YYYY")
 	if err != nil {
 		return err
 	}
@@ -493,7 +494,7 @@ func (m *Model) submitForm() error {
 	case modalEditLofiURL:
 		url := m.formValue(0)
 		if url == "" {
-			return fmt.Errorf("Playlist URL is required.")
+			return fmt.Errorf("playlist URL is required")
 		}
 		m.lofi.url = url
 		m.lofiReload = true
