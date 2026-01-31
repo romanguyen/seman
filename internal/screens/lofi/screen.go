@@ -94,7 +94,7 @@ func Render(state screens.State, width, height int, t style.Theme) string {
 	if playlistContentH > maxLines {
 		playlistContentH = maxLines
 	}
-	playlistBody := renderLofiPlaylist(state.LofiPlaylist, state.LofiCursor, state.LofiOffset, playlistContentH, playlistWidth, t)
+	playlistBody := renderLofiPlaylist(state.LofiPlaylist, state.LofiCursor, 0, playlistContentH, playlistWidth, t)
 	playlistPanel := components.RenderPanel(playlistWidth, height, "Playlist", playlistBody, t)
 
 	if gap > 0 {

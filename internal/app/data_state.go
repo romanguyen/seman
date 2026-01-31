@@ -3,6 +3,7 @@ package app
 import (
 	"strings"
 
+	"student-exams-manager/internal/domain"
 	"student-exams-manager/internal/storage"
 )
 
@@ -10,7 +11,6 @@ func (m *Model) applyData(data storage.SemesterData) {
 	m.subjects = data.Subjects
 	m.projects = data.Projects
 	m.checklistItems = data.Checklist
-	m.todoExams = data.TodoExams
 	m.confirmOn = data.ConfirmOn
 	m.setWeekSpanFromData(data.WeekSpan)
 	m.setWeekStartFromData(data.WeekStart)
@@ -46,7 +46,6 @@ func (m *Model) applyData(data storage.SemesterData) {
 	if m.lofiCursor < 0 && len(m.lofiPlaylist) > 0 {
 		m.lofiCursor = 0
 	}
-	m.ensureLofiVisible()
 }
 
 func (m Model) exportData() storage.SemesterData {
@@ -54,9 +53,8 @@ func (m Model) exportData() storage.SemesterData {
 		Subjects:    m.subjects,
 		Projects:    m.projects,
 		Checklist:   m.checklistItems,
-		TodoExams:   m.todoExams,
 		ConfirmOn:   m.confirmOn,
-		WeekStart:   m.weekStart.Format("2006-01-02"),
+		WeekStart:   domain.FormatDate(m.weekStart),
 		WeekSpan:    m.weekSpan,
 		LofiEnabled: m.lofi.enabled,
 		LofiURL:     m.lofi.url,

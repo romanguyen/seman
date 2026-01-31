@@ -46,7 +46,7 @@ func (m Model) View() string {
 	if state.Modal.Mode != components.ModalHidden {
 		main = screens.RenderModal(state, m.width, mainHeight, t)
 	}
-	footer := components.RenderFooter(m.width, len(m.tabItems()), m.saveError, t)
+	footer := components.RenderFooter(m.width, len(m.tabItems()), m.activeTab, m.saveError, t)
 
 	return strings.Join([]string{header, tabs, divider, main, divider, footer}, "\n")
 }
@@ -68,7 +68,6 @@ func (m Model) viewState() screens.State {
 		FilterEnd:     end,
 		FilterAll:     all,
 		WeekSpan:      m.weekSpan,
-		TodoExams:     m.todoExams,
 		ProjectCursor: m.projectCursor,
 		LofiEnabled:   m.lofi.enabled,
 		LofiURL:       m.lofi.url,
@@ -76,7 +75,6 @@ func (m Model) viewState() screens.State {
 		LofiError:     m.lofi.err,
 		LofiPlaylist:  m.lofiPlaylist,
 		LofiCursor:    m.lofiCursor,
-		LofiOffset:    m.lofiOffset,
 		LofiNow:       m.lofiNow,
 	}
 

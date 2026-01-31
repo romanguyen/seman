@@ -1,10 +1,6 @@
 package app
 
-import (
-	"strings"
-
-	"student-exams-manager/internal/domain"
-)
+import "student-exams-manager/internal/domain"
 
 func (m *Model) refreshExamFilter() {
 	exams := m.examsForSelected()
@@ -63,23 +59,6 @@ func (m *Model) normalizeExamCursor() {
 	if m.visibleIndex(m.examVisible, m.examCursor) == -1 {
 		m.examCursor = m.examVisible[0]
 	}
-}
-
-func examKey(items []domain.ExamItem, idx int) string {
-	if idx < 0 || idx >= len(items) {
-		return ""
-	}
-	item := items[idx]
-	return strings.ToUpper(item.Name) + "|" + item.Date + "|" + strings.ToUpper(item.Priority)
-}
-
-func findExamIndex(items []domain.ExamItem, key string) int {
-	for i := range items {
-		if examKey(items, i) == key {
-			return i
-		}
-	}
-	return -1
 }
 
 func (m *Model) moveSemesterCursor(delta int) {

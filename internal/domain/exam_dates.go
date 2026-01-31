@@ -11,10 +11,8 @@ func ParseExamDate(value string) (time.Time, bool) {
 		return time.Time{}, false
 	}
 	layouts := []string{
-		"Jan 2, 2006 @ 15:04",
-		"Jan 2, 2006",
-		"2006-01-02 15:04",
-		"2006-01-02",
+		DateTimeLayout,
+		DateLayout,
 	}
 	for _, layout := range layouts {
 		if t, err := time.ParseInLocation(layout, value, time.Local); err == nil {

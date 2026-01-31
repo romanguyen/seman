@@ -1,10 +1,14 @@
 package app
 
-import "time"
+import (
+	"time"
+
+	"student-exams-manager/internal/domain"
+)
 
 func (m *Model) setWeekStartFromData(value string) {
 	if value != "" {
-		if t, err := time.ParseInLocation("2006-01-02", value, time.Local); err == nil {
+		if t, ok := domain.ParseTodoDate(value); ok {
 			m.weekStart = weekStartOf(t)
 			m.updateWeekLabel()
 			return

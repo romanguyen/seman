@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"student-exams-manager/internal/domain"
 )
 
 func weekStartOf(t time.Time) time.Time {
@@ -23,10 +25,10 @@ func weekLabel(start time.Time, span int) string {
 	if span <= 1 {
 		weekNum, _ := start.ISOWeek()
 		end := start.AddDate(0, 0, 6)
-		return "Week " + strconv.Itoa(weekNum) + " - " + start.Format("Jan 2") + " - " + end.Format("Jan 2, 2006")
+		return "Week " + strconv.Itoa(weekNum) + " - " + domain.FormatDate(start) + " - " + domain.FormatDate(end)
 	}
 	end := start.AddDate(0, 0, span*7-1)
 	startWeek, _ := start.ISOWeek()
 	endWeek, _ := end.ISOWeek()
-	return fmt.Sprintf("Weeks %d-%d - %s - %s", startWeek, endWeek, start.Format("Jan 2"), end.Format("Jan 2, 2006"))
+	return fmt.Sprintf("Weeks %d-%d - %s - %s", startWeek, endWeek, domain.FormatDate(start), domain.FormatDate(end))
 }

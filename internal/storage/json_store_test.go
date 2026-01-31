@@ -30,7 +30,6 @@ func TestJSONStoreSaveLoadRoundtrip(t *testing.T) {
 		Subjects:    []domain.SubjectItem{{Code: "CS101", Name: "Computer Science"}},
 		Projects:    []domain.ProjectItem{{Name: "Final Project", Subject: "CS101", Due: "2026-05-01", Status: domain.ProjectStatusNotStarted}},
 		Checklist:   []domain.ChecklistItem{{Text: "Read notes", Done: false, Due: "2026-01-12"}},
-		TodoExams:   []string{"2026-01-20"},
 		ConfirmOn:   true,
 		WeekStart:   "2026-01-12",
 		WeekSpan:    2,

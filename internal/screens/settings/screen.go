@@ -30,9 +30,6 @@ func Render(state screens.State, width, height int, t style.Theme) string {
 	displayContentW := layout.PanelContentWidth(leftWidth)
 	displayBody := strings.Join([]string{
 		components.AlignLine(displayContentW, t.Text.Render("Weeks visible: "+weekSpanLabel(state.WeekSpan)), t.Text.Render("[W] Change")),
-		components.AlignLine(displayContentW, t.Text.Render("Date format: DD/MM/YYYY"), t.Text.Render("[F] Change")),
-		components.AlignLine(displayContentW, t.Text.Render("Time format: 24-hour"), t.Text.Render("[T] Toggle")),
-		components.AlignLine(displayContentW, t.Text.Render("Highlight urgent items: Yes"), t.Text.Render("[H] Toggle")),
 		components.AlignLine(displayContentW, t.Text.Render(fmt.Sprintf("Confirm deletions: %s", components.YesNo(state.ConfirmOn))), t.Text.Render("[O] Toggle")),
 		components.AlignLine(displayContentW, t.Text.Render(fmt.Sprintf("Lofi tab: %s", components.YesNo(state.LofiEnabled))), t.Text.Render("[L] Toggle")),
 		components.AlignLine(displayContentW, t.Text.Render("Lofi playlist: "+lofiURLLabel(state.LofiURL, displayContentW)), t.Text.Render("[U] Edit")),

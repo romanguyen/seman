@@ -23,7 +23,6 @@ type State struct {
 	FilterEnd     time.Time
 	FilterAll     bool
 	WeekSpan      int
-	TodoExams     []string
 	ProjectCursor int
 	LofiEnabled   bool
 	LofiURL       string
@@ -31,7 +30,6 @@ type State struct {
 	LofiError     string
 	LofiPlaylist  []domain.LofiTrack
 	LofiCursor    int
-	LofiOffset    int
 	LofiNow       int
 	Modal         components.ModalState
 }

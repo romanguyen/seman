@@ -62,15 +62,23 @@ func RenderExamList(exams []domain.ExamItem, examIdx int, highlight bool, t styl
 		}
 		b.WriteString(nameStyle.Render(prefix + exam.Name))
 		if exam.Date != "" {
+			label := exam.Date
+			if parsed, ok := domain.ParseExamDate(exam.Date); ok {
+				label = domain.FormatDate(parsed)
+			}
 			b.WriteString("\n")
-			b.WriteString(t.Dim.Render("Current date: " + exam.Date))
+			b.WriteString(t.Dim.Render("Current date: " + label))
 		}
 		if len(exam.Retakes) > 0 {
 			b.WriteString("\n")
 			b.WriteString(t.Dim.Render("Retake dates:"))
 			for _, date := range exam.Retakes {
+				label := date
+				if parsed, ok := domain.ParseExamDate(date); ok {
+					label = domain.FormatDate(parsed)
+				}
 				b.WriteString("\n")
-				b.WriteString(t.Dim.Render(" - " + date))
+				b.WriteString(t.Dim.Render(" - " + label))
 			}
 		}
 		if exam.Priority != "" {

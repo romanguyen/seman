@@ -21,35 +21,7 @@ func (m *Model) resize(width, height int) {
 			m.checklist.Height = bounds.ActionsHeight
 		}
 	case tabLofi:
-		m.resizeLofi(width, mainHeight)
-	}
-	m.refreshChecklistView()
-}
-
-func (m *Model) resizeLofi(width, height int) {
-	gap := 1
-	available := width - gap
-	if available < 1 {
-		available = width
-		gap = 0
-	}
-	leftWidth := available / 2
-	rightWidth := available - leftWidth
-	if leftWidth < 1 {
-		leftWidth = available
-		rightWidth = 0
-	}
-	playlistWidth := rightWidth
-	if rightWidth == 0 {
-		m.lofiListHeight = 0
-		m.lofiOffset = 0
 		return
 	}
-
-	_, contentH := layout.PanelContentSize(playlistWidth, height)
-	if contentH < 1 {
-		contentH = 1
-	}
-	m.lofiListHeight = contentH
-	m.ensureLofiVisible()
+	m.refreshChecklistView()
 }

@@ -35,7 +35,7 @@ func RenderUpcomingExams(subjects []domain.SubjectItem, limit int, start, end ti
 		item := exams[i]
 		b.WriteString(t.Text.Render(fmt.Sprintf("- %s (%s)", item.Name, item.Subject)))
 		b.WriteString("\n")
-		dateStr := item.Date.Format("Jan 2, 2006 @ 15:04")
+		dateStr := domain.FormatDate(item.Date)
 		b.WriteString(t.Dim.Render("  " + dateStr + " "))
 		if item.Priority != "" {
 			b.WriteString(RenderPriority(item.Priority))

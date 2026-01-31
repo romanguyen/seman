@@ -94,7 +94,6 @@ func (m *Model) applyLofiPlaylist(msg lofiPlaylistMsg) {
 	if m.lofiNow >= len(m.lofiPlaylist) || m.lofiNow < 0 {
 		m.lofiNow = 0
 	}
-	m.ensureLofiVisible()
 }
 
 func (m *Model) applyLofiIndex(msg lofiIndexMsg) tea.Cmd {
@@ -108,10 +107,6 @@ func (m *Model) applyLofiIndex(msg lofiIndexMsg) tea.Cmd {
 	m.lofi.status = lofiStatusLoading
 	m.lofi.err = ""
 	return m.pollLofiPlayback(0)
-}
-
-func (m *Model) ensureLofiVisible() {
-	m.lofiOffset = 0
 }
 
 func (m *Model) handleLofiExit(msg lofiExitMsg) {
@@ -155,7 +150,6 @@ func (m *Model) playLofiAt(index int) tea.Cmd {
 	}
 	m.lofiNow = index
 	m.lofiCursor = index
-	m.ensureLofiVisible()
 
 	var cmd tea.Cmd
 	if m.lofi.cmd == nil {
@@ -262,7 +256,6 @@ func (m *Model) lofiNext() tea.Cmd {
 	if len(m.lofiPlaylist) > 0 && m.lofiNow < len(m.lofiPlaylist)-1 {
 		m.lofiNow++
 		m.lofiCursor = m.lofiNow
-		m.ensureLofiVisible()
 	}
 	return m.setLofiLoadingAndPoll()
 }
@@ -278,7 +271,6 @@ func (m *Model) lofiPrev() tea.Cmd {
 	if len(m.lofiPlaylist) > 0 && m.lofiNow > 0 {
 		m.lofiNow--
 		m.lofiCursor = m.lofiNow
-		m.ensureLofiVisible()
 	}
 	return m.setLofiLoadingAndPoll()
 }

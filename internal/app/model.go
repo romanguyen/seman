@@ -26,15 +26,12 @@ type Model struct {
 	semesterFocus   semesterFocus
 	weekLabel       string
 	weekStart       time.Time
-	todoExams       []string
 	projectCursor   int
 	confirmOn       bool
 	weekSpan        int
 	lofi            lofiState
 	lofiPlaylist    []domain.LofiTrack
 	lofiCursor      int
-	lofiOffset      int
-	lofiListHeight  int
 	lofiNow         int
 	lofiReload      bool
 	modal           modalKind
@@ -152,6 +149,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "a", "A":
 			if m.openAddForTab() {
+				return m, nil
+			}
+		case "s", "S":
+			if m.activeTab == tabExams {
+				m.openAddSubject()
 				return m, nil
 			}
 		case "e", "E":

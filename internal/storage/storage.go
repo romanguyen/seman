@@ -6,7 +6,6 @@ type SemesterData struct {
 	Subjects    []domain.SubjectItem   `json:"subjects"`
 	Projects    []domain.ProjectItem   `json:"projects"`
 	Checklist   []domain.ChecklistItem `json:"checklist"`
-	TodoExams   []string               `json:"todo_exams"`
 	ConfirmOn   bool                   `json:"confirm_on"`
 	WeekStart   string                 `json:"week_start"`
 	WeekSpan    int                    `json:"week_span"`

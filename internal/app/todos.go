@@ -100,7 +100,7 @@ func (m *Model) ensureTodoDueDates() {
 		return
 	}
 	changed := false
-	defaultDue := m.weekStart.Format("2006-01-02")
+	defaultDue := domain.FormatDate(m.weekStart)
 	for i := range m.checklistItems {
 		if strings.TrimSpace(m.checklistItems[i].Due) == "" {
 			m.checklistItems[i].Due = defaultDue

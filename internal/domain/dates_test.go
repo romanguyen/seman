@@ -3,7 +3,7 @@ package domain
 import "testing"
 
 func TestParseExamDate(t *testing.T) {
-	parsed, ok := ParseExamDate("Jan 2, 2006 @ 15:04")
+	parsed, ok := ParseExamDate("02/01/2006")
 	if !ok {
 		t.Fatalf("expected exam date to parse")
 	}
@@ -18,7 +18,7 @@ func TestParseExamDate(t *testing.T) {
 }
 
 func TestParseTodoDate(t *testing.T) {
-	parsed, ok := ParseTodoDate("2026-01-12")
+	parsed, ok := ParseTodoDate("12/01/2026")
 	if !ok {
 		t.Fatalf("expected todo date to parse")
 	}
