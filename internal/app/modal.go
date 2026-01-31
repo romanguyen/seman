@@ -320,7 +320,7 @@ func parseRetakesOrError(raw string) ([]string, error) {
 	for i := range retakes {
 		parsed, ok := domain.ParseStrictDate(retakes[i])
 		if !ok {
-			return nil, fmt.Errorf("Retakes must be DD/MM/YYYY.")
+			return nil, fmt.Errorf("retakes must be DD/MM/YYYY")
 		}
 		retakes[i] = domain.FormatDate(parsed)
 	}

@@ -341,13 +341,13 @@ func (m *Model) shutdownLofi() {
 
 func (m *Model) validateLofi() error {
 	if !m.lofi.enabled {
-		return fmt.Errorf("Enable Lofi in Settings first.")
+		return fmt.Errorf("enable Lofi in Settings first")
 	}
 	if strings.TrimSpace(m.lofi.url) == "" {
-		return fmt.Errorf("Set a playlist URL in Settings.")
+		return fmt.Errorf("set a playlist URL in Settings")
 	}
 	if _, err := exec.LookPath("mpv"); err != nil {
-		return fmt.Errorf("mpv not found. Install mpv to enable Lofi playback.")
+		return fmt.Errorf("mpv not found; install mpv to enable Lofi playback")
 	}
 	return nil
 }
@@ -373,7 +373,7 @@ type ytPlaylist struct {
 
 func fetchLofiPlaylist(url string) ([]domain.LofiTrack, error) {
 	if _, err := exec.LookPath("yt-dlp"); err != nil {
-		return nil, fmt.Errorf("yt-dlp not found. Install yt-dlp to load playlists.")
+		return nil, fmt.Errorf("yt-dlp not found; install yt-dlp to load playlists")
 	}
 	cmd := exec.Command("yt-dlp", "--flat-playlist", "-J", url)
 	output, err := cmd.CombinedOutput()
@@ -385,7 +385,7 @@ func fetchLofiPlaylist(url string) ([]domain.LofiTrack, error) {
 		return nil, fmt.Errorf("yt-dlp parse error: %v", err)
 	}
 	if len(payload.Entries) == 0 {
-		return nil, fmt.Errorf("Playlist is empty.")
+		return nil, fmt.Errorf("playlist is empty")
 	}
 	tracks := make([]domain.LofiTrack, 0, len(payload.Entries))
 	for _, entry := range payload.Entries {
@@ -400,7 +400,7 @@ func fetchLofiPlaylist(url string) ([]domain.LofiTrack, error) {
 		tracks = append(tracks, domain.LofiTrack{Title: title, Note: note})
 	}
 	if len(tracks) == 0 {
-		return nil, fmt.Errorf("Playlist is empty.")
+		return nil, fmt.Errorf("playlist is empty")
 	}
 	return tracks, nil
 }
@@ -410,7 +410,9 @@ func (m *Model) sendLofiCommand(args ...any) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 	payload, err := json.Marshal(map[string]any{"command": args})
 	if err != nil {
 		return err
@@ -442,13 +444,15 @@ func (m *Model) isLofiPlaying() (bool, error) {
 
 func (m *Model) sendLofiRequest(args ...any) (mpvResponse, error) {
 	if m.lofi.socketPath == "" {
-		return mpvResponse{}, fmt.Errorf("Player not running.")
+		return mpvResponse{}, fmt.Errorf("player not running")
 	}
 	conn, err := net.Dial("unix", m.lofi.socketPath)
 	if err != nil {
 		return mpvResponse{}, err
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 	payload, err := json.Marshal(map[string]any{"command": args, "request_id": 1})
 	if err != nil {
 		return mpvResponse{}, err
@@ -471,7 +475,7 @@ func (m *Model) sendLofiRequest(args ...any) (mpvResponse, error) {
 
 func (m *Model) dialLofiSocket() (net.Conn, error) {
 	if m.lofi.socketPath == "" {
-		return nil, fmt.Errorf("Player not running.")
+		return nil, fmt.Errorf("player not running")
 	}
 	var lastErr error
 	for i := 0; i < 6; i++ {

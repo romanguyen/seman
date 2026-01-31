@@ -23,7 +23,9 @@ func (s *JSONStore) Load() (SemesterData, bool, error) {
 		}
 		return SemesterData{}, false, err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	var data SemesterData
 	if err := json.NewDecoder(file).Decode(&data); err != nil {
