@@ -1,4 +1,4 @@
-package weekly
+package todo
 
 import (
 	"strings"
@@ -11,7 +11,7 @@ import (
 )
 
 func Render(state screens.State, width, height int, t style.Theme) string {
-	bounds := layout.ComputeWeeklyLayout(width, height)
+	bounds := layout.ComputeTodoLayout(width, height)
 
 	var parts []string
 	rightPanel := components.RenderPanel(bounds.RightWidth, bounds.PanelsHeight, "Todos", state.Checklist.View(), t)

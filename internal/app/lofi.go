@@ -50,21 +50,6 @@ type lofiPlaybackMsg struct {
 	err      error
 }
 
-func defaultLofiPlaylist() []domain.LofiTrack {
-	return []domain.LofiTrack{
-		{Title: "Lofi Hip Hop Radio - Beats to Study/Relax", Note: "Classic lofi beats"},
-		{Title: "ChillHop Radio - Jazzy & Lofi Hip Hop", Note: "Smooth jazzy lofi"},
-		{Title: "Lofi Girl - Sleep/Chill Radio", Note: "Calm beats for sleeping"},
-		{Title: "Coffee Shop Ambience", Note: "Cozy cafe vibes"},
-		{Title: "Rainy Day Lofi", Note: "Rain sounds with beats"},
-		{Title: "Midnight Lofi Mix", Note: "Late night study session"},
-		{Title: "Synthwave Lofi", Note: "Retro synth lofi beats"},
-		{Title: "Japanese Lofi", Note: "Traditional Japanese inspired"},
-		{Title: "Piano Lofi Collection", Note: "Soft piano melodies"},
-		{Title: "Chill Beats Vol. 1", Note: "Best chill collection"},
-	}
-}
-
 func (m *Model) toggleLofiEnabled() tea.Cmd {
 	m.lofi.enabled = !m.lofi.enabled
 	if !m.lofi.enabled {

@@ -31,7 +31,7 @@ type SemesterLayout struct {
 	RightWidth int
 }
 
-type WeeklyLayout struct {
+type TodoLayout struct {
 	LeftWidth     int
 	RightWidth    int
 	PanelsHeight  int
@@ -127,7 +127,7 @@ func ComputeSemesterLayout(width, height int) SemesterLayout {
 	}
 }
 
-func ComputeWeeklyLayout(width, height int) WeeklyLayout {
+func ComputeTodoLayout(width, height int) TodoLayout {
 	available := width
 	if available < 0 {
 		available = 0
@@ -143,7 +143,7 @@ func ComputeWeeklyLayout(width, height int) WeeklyLayout {
 		actionsH--
 	}
 
-	return WeeklyLayout{
+	return TodoLayout{
 		LeftWidth:     leftWidth,
 		RightWidth:    rightWidth,
 		PanelsHeight:  panelsH,

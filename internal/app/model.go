@@ -26,7 +26,7 @@ type Model struct {
 	semesterFocus   semesterFocus
 	weekLabel       string
 	weekStart       time.Time
-	weeklyExams     []string
+	todoExams       []string
 	projectCursor   int
 	confirmOn       bool
 	weekSpan        int
@@ -87,7 +87,6 @@ func NewModel(store storage.Store, data storage.SemesterData, hasData bool) Mode
 		lofiNow:        -1,
 		store:          store,
 	}
-	m.lofiPlaylist = defaultLofiPlaylist()
 	m.applyData(data)
 	return m
 }

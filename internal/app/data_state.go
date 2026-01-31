@@ -10,7 +10,7 @@ func (m *Model) applyData(data storage.SemesterData) {
 	m.subjects = data.Subjects
 	m.projects = data.Projects
 	m.checklistItems = data.Checklist
-	m.weeklyExams = data.WeeklyExams
+	m.todoExams = data.TodoExams
 	m.confirmOn = data.ConfirmOn
 	m.setWeekSpanFromData(data.WeekSpan)
 	m.setWeekStartFromData(data.WeekStart)
@@ -54,7 +54,7 @@ func (m Model) exportData() storage.SemesterData {
 		Subjects:    m.subjects,
 		Projects:    m.projects,
 		Checklist:   m.checklistItems,
-		WeeklyExams: m.weeklyExams,
+		TodoExams:   m.todoExams,
 		ConfirmOn:   m.confirmOn,
 		WeekStart:   m.weekStart.Format("2006-01-02"),
 		WeekSpan:    m.weekSpan,

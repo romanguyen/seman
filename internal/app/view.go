@@ -9,7 +9,7 @@ import (
 	"student-exams-manager/internal/screens/projects"
 	"student-exams-manager/internal/screens/semester"
 	"student-exams-manager/internal/screens/settings"
-	"student-exams-manager/internal/screens/weekly"
+	"student-exams-manager/internal/screens/todo"
 	"student-exams-manager/internal/style"
 	"student-exams-manager/internal/ui/components"
 	"student-exams-manager/internal/ui/layout"
@@ -33,7 +33,7 @@ func (m Model) View() string {
 	case tabExams:
 		main = semester.Render(state, m.width, mainHeight, t)
 	case tabTodos:
-		main = weekly.Render(state, m.width, mainHeight, t)
+		main = todo.Render(state, m.width, mainHeight, t)
 	case tabProjects:
 		main = projects.Render(state, m.width, mainHeight, t)
 	case tabSettings:
@@ -68,7 +68,7 @@ func (m Model) viewState() screens.State {
 		FilterEnd:     end,
 		FilterAll:     all,
 		WeekSpan:      m.weekSpan,
-		WeeklyExams:   m.weeklyExams,
+		TodoExams:     m.todoExams,
 		ProjectCursor: m.projectCursor,
 		LofiEnabled:   m.lofi.enabled,
 		LofiURL:       m.lofi.url,

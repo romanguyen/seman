@@ -563,7 +563,7 @@ func (m *Model) applyConfirmAction() {
 		m.subjects = nil
 		m.projects = nil
 		m.checklistItems = nil
-		m.weeklyExams = nil
+		m.todoExams = nil
 		m.selectedSubj = 0
 		m.projectCursor = 0
 		m.refreshChecklistView()

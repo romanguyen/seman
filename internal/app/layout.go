@@ -15,7 +15,7 @@ func (m *Model) resize(width, height int) {
 			m.checklist.Height = bounds.ChecklistHeight
 		}
 	case tabTodos:
-		bounds := layout.ComputeWeeklyLayout(width, mainHeight)
+		bounds := layout.ComputeTodoLayout(width, mainHeight)
 		if bounds.ActionsWidth > 0 && bounds.ActionsHeight > 0 {
 			m.checklist.Width = bounds.ActionsWidth
 			m.checklist.Height = bounds.ActionsHeight

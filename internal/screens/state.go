@@ -23,7 +23,7 @@ type State struct {
 	FilterEnd     time.Time
 	FilterAll     bool
 	WeekSpan      int
-	WeeklyExams   []string
+	TodoExams     []string
 	ProjectCursor int
 	LofiEnabled   bool
 	LofiURL       string

@@ -17,7 +17,7 @@ func RenderWeekHeader(label string, width int, t style.Theme) string {
 	return t.Dim.Render(box.Render(text))
 }
 
-func RenderWeeklyExams(exams []string, t style.Theme) string {
+func RenderTodoExams(exams []string, t style.Theme) string {
 	if len(exams) == 0 {
 		return t.Dim.Render("No exams this week")
 	}
