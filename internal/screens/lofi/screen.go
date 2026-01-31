@@ -42,7 +42,7 @@ func Render(state screens.State, width, height int, t style.Theme) string {
 		title = "No track selected"
 	}
 	if note == "" {
-		note = "Press Enter to play the selected track"
+		note = "Use the controls below to start playback"
 	}
 
 	status := state.LofiStatus

@@ -92,22 +92,6 @@ func (m *Model) consumeLofiReload() tea.Cmd {
 	return loadLofiPlaylist(m.lofi.url)
 }
 
-func (m *Model) moveLofiCursor(delta int) {
-	if len(m.lofiPlaylist) == 0 {
-		m.lofiCursor = 0
-		m.lofiOffset = 0
-		return
-	}
-	m.lofiCursor += delta
-	if m.lofiCursor < 0 {
-		m.lofiCursor = 0
-	}
-	if m.lofiCursor >= len(m.lofiPlaylist) {
-		m.lofiCursor = len(m.lofiPlaylist) - 1
-	}
-	m.ensureLofiVisible()
-}
-
 func (m *Model) applyLofiPlaylist(msg lofiPlaylistMsg) {
 	if msg.err != nil {
 		m.lofi.err = msg.err.Error()
@@ -142,38 +126,7 @@ func (m *Model) applyLofiIndex(msg lofiIndexMsg) tea.Cmd {
 }
 
 func (m *Model) ensureLofiVisible() {
-	if len(m.lofiPlaylist) == 0 {
-		m.lofiOffset = 0
-		return
-	}
-	visible := m.lofiListHeight
-	if visible < 1 {
-		m.lofiOffset = 0
-		return
-	}
-	maxLines := domain.LofiVisibleCap*2 - 1
-	if visible > maxLines {
-		visible = maxLines
-	}
-	totalLines := len(m.lofiPlaylist)*2 - 1
-	if totalLines <= visible {
-		m.lofiOffset = 0
-		return
-	}
-	lineIdx := m.lofiCursor * 2
-	if lineIdx < m.lofiOffset {
-		m.lofiOffset = lineIdx
-	}
-	if lineIdx >= m.lofiOffset+visible {
-		m.lofiOffset = lineIdx - visible + 1
-	}
-	maxOffset := totalLines - visible
-	if m.lofiOffset > maxOffset {
-		m.lofiOffset = maxOffset
-	}
-	if m.lofiOffset < 0 {
-		m.lofiOffset = 0
-	}
+	m.lofiOffset = 0
 }
 
 func (m *Model) handleLofiExit(msg lofiExitMsg) {

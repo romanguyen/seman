@@ -270,12 +270,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.activeTab == tabLofi {
 			switch key {
-			case "j", "down":
-				m.moveLofiCursor(1)
-				return m, nil
-			case "k", "up":
-				m.moveLofiCursor(-1)
-				return m, nil
 			case "enter":
 				cmd := m.playLofiAt(m.lofiCursor)
 				return m, cmd
