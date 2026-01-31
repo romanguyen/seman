@@ -1,23 +1,36 @@
-name: ci
+name: CI
 
 on:
-  push:
   pull_request:
+  push:
+    branches: [ "main" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.21"
+          cache: true
 
-      - name: Download dependencies
-        run: go mod download
+      - name: Test
+        run: go test ./...
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+          cache: true
 
       - name: Build
-        run: go build ./cmd/seman
+        run: go build -o seman ./cmd/seman
