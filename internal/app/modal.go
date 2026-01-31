@@ -185,6 +185,12 @@ func setFormValues(fields []formField, values ...string) {
 	}
 }
 
+func (m *Model) openForm(kind modalKind, title string, specs []formSpec, values ...string) {
+	fields := buildForm(specs, m.modalInputWidth())
+	setFormValues(fields, values...)
+	m.openFormModal(kind, title, fields)
+}
+
 func formatDateForInput(value string) string {
 	if parsed, ok := domain.ParseExamDate(value); ok {
 		return domain.FormatDate(parsed)
@@ -193,24 +199,19 @@ func formatDateForInput(value string) string {
 }
 
 func (m *Model) openAddSubject() {
-	fields := buildForm(subjectFormSpec, m.modalInputWidth())
-	m.openFormModal(modalAddSubject, "Add Subject", fields)
+	m.openForm(modalAddSubject, "Add Subject", subjectFormSpec)
 }
 
 func (m *Model) openAddExam() {
-	fields := buildForm(examFormSpec, m.modalInputWidth())
-	m.openFormModal(modalAddExam, "Add Exam", fields)
+	m.openForm(modalAddExam, "Add Exam", examFormSpec)
 }
 
 func (m *Model) openAddProject() {
-	fields := buildForm(projectFormSpec, m.modalInputWidth())
-	m.openFormModal(modalAddProject, "Add Project", fields)
+	m.openForm(modalAddProject, "Add Project", projectFormSpec)
 }
 
 func (m *Model) openAddTodo() {
-	fields := buildForm(todoFormSpec, m.modalInputWidth())
-	setFormValues(fields, "", domain.FormatDate(m.weekStart))
-	m.openFormModal(modalAddTodo, "Add Todo", fields)
+	m.openForm(modalAddTodo, "Add Todo", todoFormSpec, "", domain.FormatDate(m.weekStart))
 }
 
 func (m *Model) openEditCurrent() {
@@ -233,10 +234,8 @@ func (m *Model) openEditSubject() {
 		return
 	}
 	subj := m.subjects[m.selectedSubj]
-	fields := buildForm(subjectFormSpec, m.modalInputWidth())
-	setFormValues(fields, subj.Code, subj.Name)
 	m.editSubjectIdx = m.selectedSubj
-	m.openFormModal(modalEditSubject, "Edit Subject", fields)
+	m.openForm(modalEditSubject, "Edit Subject", subjectFormSpec, subj.Code, subj.Name)
 }
 
 func (m *Model) openEditExam() {
@@ -245,15 +244,13 @@ func (m *Model) openEditExam() {
 		return
 	}
 	exam := exams[m.examCursor]
-	fields := buildForm(examFormSpec[1:], m.modalInputWidth())
 	retakes := make([]string, 0, len(exam.Retakes))
 	for _, date := range exam.Retakes {
 		retakes = append(retakes, formatDateForInput(date))
 	}
-	setFormValues(fields, exam.Name, formatDateForInput(exam.Date), strings.Join(retakes, ", "), exam.Priority)
 	m.editSubjectIdx = m.selectedSubj
 	m.editExamIdx = m.examCursor
-	m.openFormModal(modalEditExam, "Edit Exam", fields)
+	m.openForm(modalEditExam, "Edit Exam", examFormSpec[1:], exam.Name, formatDateForInput(exam.Date), strings.Join(retakes, ", "), exam.Priority)
 }
 
 func (m *Model) openEditProject() {
@@ -261,10 +258,8 @@ func (m *Model) openEditProject() {
 		return
 	}
 	project := m.projects[m.projectCursor]
-	fields := buildForm(projectFormSpec, m.modalInputWidth())
-	setFormValues(fields, project.Name, project.Subject, formatDateForInput(project.Due), project.Status)
 	m.editProjectIdx = m.projectCursor
-	m.openFormModal(modalEditProject, "Edit Project", fields)
+	m.openForm(modalEditProject, "Edit Project", projectFormSpec, project.Name, project.Subject, formatDateForInput(project.Due), project.Status)
 }
 
 func (m *Model) openEditTodo() {
@@ -272,16 +267,12 @@ func (m *Model) openEditTodo() {
 		return
 	}
 	item := m.checklistItems[m.checklistCursor]
-	fields := buildForm(todoFormSpec, m.modalInputWidth())
-	setFormValues(fields, item.Text, formatDateForInput(item.Due))
 	m.editTodoIdx = m.checklistCursor
-	m.openFormModal(modalEditTodo, "Edit Todo", fields)
+	m.openForm(modalEditTodo, "Edit Todo", todoFormSpec, item.Text, formatDateForInput(item.Due))
 }
 
 func (m *Model) openEditLofiURL() {
-	fields := buildForm(lofiFormSpec, m.modalInputWidth())
-	setFormValues(fields, m.lofi.url)
-	m.openFormModal(modalEditLofiURL, "Edit Lofi Playlist", fields)
+	m.openForm(modalEditLofiURL, "Edit Lofi Playlist", lofiFormSpec, m.lofi.url)
 }
 
 func (m *Model) openFormModal(kind modalKind, title string, fields []formField) {
@@ -316,6 +307,26 @@ func (m *Model) formValue(idx int) string {
 	return strings.TrimSpace(m.formFields[idx].input.Value())
 }
 
+func parseStrictDateOrError(value, message string) (string, error) {
+	parsed, ok := domain.ParseStrictDate(value)
+	if !ok {
+		return "", fmt.Errorf(message)
+	}
+	return domain.FormatDate(parsed), nil
+}
+
+func parseRetakesOrError(raw string) ([]string, error) {
+	retakes := splitCSV(raw)
+	for i := range retakes {
+		parsed, ok := domain.ParseStrictDate(retakes[i])
+		if !ok {
+			return nil, fmt.Errorf("Retakes must be DD/MM/YYYY.")
+		}
+		retakes[i] = domain.FormatDate(parsed)
+	}
+	return retakes, nil
+}
+
 func (m *Model) saveSubject(idx int, code, name string) error {
 	if code == "" || name == "" {
 		return fmt.Errorf("Code and Name are required.")
@@ -339,25 +350,21 @@ func (m *Model) addExam(subjectCode, examName, date, retakesRaw, priority string
 	if subjectCode == "" || examName == "" || date == "" {
 		return fmt.Errorf("Subject, Exam Name, and Date are required.")
 	}
-	parsedDate, ok := domain.ParseStrictDate(date)
-	if !ok {
-		return fmt.Errorf("Date must be DD/MM/YYYY.")
+	parsedDate, err := parseStrictDateOrError(date, "Date must be DD/MM/YYYY.")
+	if err != nil {
+		return err
 	}
 	idx := findSubjectIndex(m.subjects, subjectCode)
 	if idx < 0 {
 		return fmt.Errorf("Subject code not found.")
 	}
-	retakes := splitCSV(retakesRaw)
-	for i := range retakes {
-		parsed, ok := domain.ParseStrictDate(retakes[i])
-		if !ok {
-			return fmt.Errorf("Retakes must be DD/MM/YYYY.")
-		}
-		retakes[i] = domain.FormatDate(parsed)
+	retakes, err := parseRetakesOrError(retakesRaw)
+	if err != nil {
+		return err
 	}
 	m.subjects[idx].Exams = append(m.subjects[idx].Exams, domain.ExamItem{
 		Name:     examName,
-		Date:     domain.FormatDate(parsedDate),
+		Date:     parsedDate,
 		Retakes:  retakes,
 		Priority: strings.ToUpper(priority),
 	})
@@ -379,20 +386,16 @@ func (m *Model) updateExam(subjectIdx, examIdx int, examName, date, retakesRaw, 
 	if examName == "" || date == "" {
 		return fmt.Errorf("Exam Name and Date are required.")
 	}
-	parsedDate, ok := domain.ParseStrictDate(date)
-	if !ok {
-		return fmt.Errorf("Date must be DD/MM/YYYY.")
+	parsedDate, err := parseStrictDateOrError(date, "Date must be DD/MM/YYYY.")
+	if err != nil {
+		return err
 	}
-	retakes := splitCSV(retakesRaw)
-	for i := range retakes {
-		parsed, ok := domain.ParseStrictDate(retakes[i])
-		if !ok {
-			return fmt.Errorf("Retakes must be DD/MM/YYYY.")
-		}
-		retakes[i] = domain.FormatDate(parsed)
+	retakes, err := parseRetakesOrError(retakesRaw)
+	if err != nil {
+		return err
 	}
 	exams[examIdx].Name = examName
-	exams[examIdx].Date = domain.FormatDate(parsedDate)
+	exams[examIdx].Date = parsedDate
 	exams[examIdx].Retakes = retakes
 	exams[examIdx].Priority = strings.ToUpper(priority)
 	m.subjects[subjectIdx].Exams = exams
@@ -406,9 +409,9 @@ func (m *Model) saveProject(idx int, name, subject, deadline, status string) err
 	if name == "" || subject == "" || deadline == "" {
 		return fmt.Errorf("Name, Subject, and Deadline are required.")
 	}
-	parsedDeadline, ok := domain.ParseStrictDate(deadline)
-	if !ok {
-		return fmt.Errorf("Deadline must be DD/MM/YYYY.")
+	parsedDeadline, err := parseStrictDateOrError(deadline, "Deadline must be DD/MM/YYYY.")
+	if err != nil {
+		return err
 	}
 	if status == "" {
 		status = domain.ProjectStatusNotStarted
@@ -418,7 +421,7 @@ func (m *Model) saveProject(idx int, name, subject, deadline, status string) err
 		m.projects = append(m.projects, domain.ProjectItem{
 			Name:    name,
 			Subject: subject,
-			Due:     domain.FormatDate(parsedDeadline),
+			Due:     parsedDeadline,
 			Status:  status,
 		})
 		m.projectCursor = len(m.projects) - 1
@@ -430,7 +433,7 @@ func (m *Model) saveProject(idx int, name, subject, deadline, status string) err
 	}
 	m.projects[idx].Name = name
 	m.projects[idx].Subject = subject
-	m.projects[idx].Due = domain.FormatDate(parsedDeadline)
+	m.projects[idx].Due = parsedDeadline
 	m.projects[idx].Status = status
 	m.projectCursor = idx
 	m.persist()
@@ -444,15 +447,15 @@ func (m *Model) saveTodo(idx int, task, due string) error {
 	if due == "" {
 		return fmt.Errorf("Due date is required.")
 	}
-	parsedDue, ok := domain.ParseStrictDate(due)
-	if !ok {
-		return fmt.Errorf("Due date must be DD/MM/YYYY.")
+	parsedDue, err := parseStrictDateOrError(due, "Due date must be DD/MM/YYYY.")
+	if err != nil {
+		return err
 	}
 	if idx < 0 {
 		m.checklistItems = append(m.checklistItems, domain.ChecklistItem{
 			Text: task,
 			Done: false,
-			Due:  domain.FormatDate(parsedDue),
+			Due:  parsedDue,
 		})
 		m.checklistCursor = len(m.checklistItems) - 1
 		m.persist()
@@ -463,7 +466,7 @@ func (m *Model) saveTodo(idx int, task, due string) error {
 		return nil
 	}
 	m.checklistItems[idx].Text = task
-	m.checklistItems[idx].Due = domain.FormatDate(parsedDue)
+	m.checklistItems[idx].Due = parsedDue
 	m.persist()
 	m.refreshChecklistView()
 	return nil
