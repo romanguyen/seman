@@ -5,20 +5,20 @@
       "Name": "Physics",
       "Exams": [
         {
-          "Name": "Final Exam",
-          "Date": "Jan 17, 2026 @ 09:00",
-          "Retakes": [
-            "Jan 24, 2026 @ 09:00"
-          ],
-          "Priority": "HIGH"
-        },
-        {
           "Name": "Test",
           "Date": "Jan 14, 2026 @ 10:00",
           "Retakes": [
             "Jan 21, 2026 @ 10:00"
           ],
           "Priority": "MED"
+        },
+        {
+          "Name": "Final Exam",
+          "Date": "Jan 17, 2026 @ 09:00",
+          "Retakes": [
+            "Jan 24, 2026 @ 09:00"
+          ],
+          "Priority": "HIGH"
         }
       ]
     },
@@ -67,15 +67,27 @@
     {
       "Code": "MATH201",
       "Name": "Calculus II",
-      "Exams": null
+      "Exams": []
     }
   ],
   "projects": [
+    {
+      "Name": "Database Design Project",
+      "Subject": "CS101",
+      "Due": "May 20, 2025",
+      "Status": "IN PROGRESS"
+    },
     {
       "Name": "Renaissance Art Essay",
       "Subject": "HIST210",
       "Due": "May 28, 2025",
       "Status": "NOT STARTED"
+    },
+    {
+      "Name": "Physics Lab Simulation",
+      "Subject": "PHY150",
+      "Due": "Jun 3, 2025",
+      "Status": "IN PROGRESS"
     },
     {
       "Name": "Calculus Portfolio",
@@ -84,101 +96,84 @@
       "Status": "NOT STARTED"
     },
     {
-      "Name": "Machine Learning Assignment",
-      "Subject": "CS101",
-      "Due": "Jun 18, 2025",
-      "Status": "NOT STARTED"
-    },
-    {
-      "Name": "Database Design Project",
-      "Subject": "CS101",
-      "Due": "May 20, 2025",
-      "Status": "IN PROGRESS"
-    },
-    {
-      "Name": "Physics Lab Simulation",
-      "Subject": "PHY150",
-      "Due": "Jun 3, 2025",
-      "Status": "DONE"
-    },
-    {
       "Name": "English Literature Review",
       "Subject": "ENG102",
       "Due": "Jun 15, 2025",
       "Status": "DONE"
+    },
+    {
+      "Name": "Machine Learning Assignment",
+      "Subject": "CS101",
+      "Due": "Jun 18, 2025",
+      "Status": "NOT STARTED"
     }
   ],
   "checklist": [
     {
-      "Text": "Submit physics lab report",
-      "Done": false,
-      "Due": "2026-01-12"
-    },
-    {
-      "Text": "Review weak areas in physics",
-      "Done": false,
-      "Due": "2026-01-12"
-    },
-    {
-      "Text": "Group meeting for CS project",
-      "Done": false,
-      "Due": "2026-01-12"
-    },
-    {
-      "Text": "Prepare oral exam notes",
-      "Done": false,
-      "Due": "2026-01-12"
-    },
-    {
-      "Text": "Summarize math key formulas",
-      "Done": false,
-      "Due": "2026-01-12"
+      "Text": "Create flashcards for history",
+      "Done": true
     },
     {
       "Text": "Attend study group session",
-      "Done": false,
-      "Due": "2026-01-12"
+      "Done": true
     },
     {
       "Text": "Mock exam practice CS101",
-      "Done": false,
-      "Due": "2026-01-12"
+      "Done": false
+    },
+    {
+      "Text": "Summarize math key formulas",
+      "Done": false
     },
     {
       "Text": "Review CS101 lectures 8-10",
-      "Done": false,
-      "Due": "2026-01-12"
+      "Done": false
     },
     {
       "Text": "Complete MATH201 problem set 5",
-      "Done": true,
-      "Due": "2026-01-12"
+      "Done": true
     },
     {
       "Text": "Read PHY150 chapter 12-13",
-      "Done": true,
-      "Due": "2026-01-12"
+      "Done": false
     },
     {
       "Text": "Outline HIST210 essay",
-      "Done": true,
-      "Due": "2026-01-12"
+      "Done": false
     },
     {
       "Text": "Practice ENG102 pronunciation",
-      "Done": true,
-      "Due": "2026-01-12"
+      "Done": true
     },
     {
       "Text": "Work on database project",
-      "Done": true,
-      "Due": "2026-01-12"
+      "Done": false
+    },
+    {
+      "Text": "Group meeting for CS project",
+      "Done": false
+    },
+    {
+      "Text": "Submit physics lab report",
+      "Done": true
+    },
+    {
+      "Text": "Study calculus theorems",
+      "Done": false
+    },
+    {
+      "Text": "Review weak areas in physics",
+      "Done": false
+    },
+    {
+      "Text": "Prepare oral exam notes",
+      "Done": false
     }
   ],
   "weekly_exams": [],
   "confirm_on": true,
   "week_start": "2026-01-12",
   "week_span": 1,
-  "lofi_enabled": true,
-  "lofi_url": "https://youtube.com/playlist?list=PL-_KCC2H1EpqNxi7F6K-4LoIexTXXjJtI\u0026si=QlzAbEzqc6jeMPHH"
+  "lofi_enabled": false,
+  "lofi_url": ""
 }

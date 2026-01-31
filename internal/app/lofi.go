@@ -246,9 +246,34 @@ func (m *Model) pollLofiPlayback(attempts int) tea.Cmd {
 	})
 }
 
-func (m *Model) toggleLofiPlayPause() tea.Cmd {
+func (m *Model) validateLofiOrError() bool {
 	if err := m.validateLofi(); err != nil {
 		m.lofi.err = err.Error()
+		return false
+	}
+	return true
+}
+
+func (m *Model) ensureLofiReady() (tea.Cmd, bool) {
+	if !m.validateLofiOrError() {
+		return nil, true
+	}
+	if m.lofi.cmd == nil {
+		m.lofi.status = lofiStatusLoading
+		m.lofi.err = ""
+		return tea.Batch(m.startLofi(), m.pollLofiPlayback(0)), true
+	}
+	return nil, false
+}
+
+func (m *Model) setLofiLoadingAndPoll() tea.Cmd {
+	m.lofi.status = lofiStatusLoading
+	m.lofi.err = ""
+	return m.pollLofiPlayback(0)
+}
+
+func (m *Model) toggleLofiPlayPause() tea.Cmd {
+	if !m.validateLofiOrError() {
 		return nil
 	}
 	if m.lofiNow < 0 && len(m.lofiPlaylist) > 0 {
@@ -289,13 +314,8 @@ func (m *Model) toggleLofiPlayPause() tea.Cmd {
 }
 
 func (m *Model) lofiNext() tea.Cmd {
-	if err := m.validateLofi(); err != nil {
-		m.lofi.err = err.Error()
-		return nil
-	}
-	if m.lofi.cmd == nil {
-		m.lofi.status = lofiStatusLoading
-		return tea.Batch(m.startLofi(), m.pollLofiPlayback(0))
+	if cmd, handled := m.ensureLofiReady(); handled {
+		return cmd
 	}
 	if err := m.sendLofiCommand("playlist-next", "force"); err != nil {
 		m.lofi.err = err.Error()
@@ -306,19 +326,12 @@ func (m *Model) lofiNext() tea.Cmd {
 		m.lofiCursor = m.lofiNow
 		m.ensureLofiVisible()
 	}
-	m.lofi.status = lofiStatusLoading
-	m.lofi.err = ""
-	return m.pollLofiPlayback(0)
+	return m.setLofiLoadingAndPoll()
 }
 
 func (m *Model) lofiPrev() tea.Cmd {
-	if err := m.validateLofi(); err != nil {
-		m.lofi.err = err.Error()
-		return nil
-	}
-	if m.lofi.cmd == nil {
-		m.lofi.status = lofiStatusLoading
-		return tea.Batch(m.startLofi(), m.pollLofiPlayback(0))
+	if cmd, handled := m.ensureLofiReady(); handled {
+		return cmd
 	}
 	if err := m.sendLofiCommand("playlist-prev", "force"); err != nil {
 		m.lofi.err = err.Error()
@@ -329,9 +342,7 @@ func (m *Model) lofiPrev() tea.Cmd {
 		m.lofiCursor = m.lofiNow
 		m.ensureLofiVisible()
 	}
-	m.lofi.status = lofiStatusLoading
-	m.lofi.err = ""
-	return m.pollLofiPlayback(0)
+	return m.setLofiLoadingAndPoll()
 }
 
 func (m *Model) lofiStop() {

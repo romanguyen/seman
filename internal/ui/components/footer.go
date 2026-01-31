@@ -14,7 +14,7 @@ func RenderFooter(width, tabCount int, status string, t style.Theme) string {
 		contentWidth = 1
 	}
 
-	left := t.FooterHint.Render("[A] Add exam  [S] Add subject  [P] Add project  [Q] Quit")
+	left := t.FooterHint.Render("[A] Add  [E] Edit  [D] Delete  [Q] Quit")
 	if status != "" {
 		left = t.ModalError.Render(TruncateString(status, contentWidth))
 	}

@@ -99,6 +99,21 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
+func (m *Model) openAddForTab() bool {
+	switch m.activeTab {
+	case tabExams:
+		m.openAddExam()
+		return true
+	case tabTodos:
+		m.openAddTodo()
+		return true
+	case tabProjects:
+		m.openAddProject()
+		return true
+	}
+	return false
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -137,8 +152,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.shiftWeek(1)
 			return m, nil
 		case "a", "A":
-			m.openAddExam()
-			return m, nil
+			if m.openAddForTab() {
+				return m, nil
+			}
 		case "s", "S":
 			m.openAddSubject()
 			return m, nil

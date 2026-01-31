@@ -48,6 +48,37 @@ type formField struct {
 	required bool
 }
 
+type formSpec struct {
+	label    string
+	required bool
+}
+
+var (
+	subjectFormSpec = []formSpec{
+		{label: "Code", required: true},
+		{label: "Name", required: true},
+	}
+	examFormSpec = []formSpec{
+		{label: "Subject", required: true},
+		{label: "Exam Name", required: true},
+		{label: "Date", required: true},
+		{label: "Retakes", required: false},
+		{label: "Priority", required: false},
+	}
+	projectFormSpec = []formSpec{
+		{label: "Name", required: true},
+		{label: "Subject", required: true},
+		{label: "Deadline", required: true},
+		{label: "Status", required: false},
+	}
+	todoFormSpec = []formSpec{
+		{label: "Task", required: true},
+	}
+	lofiFormSpec = []formSpec{
+		{label: "Playlist URL", required: true},
+	}
+)
+
 func (m Model) updateModal(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -139,43 +170,37 @@ func (m *Model) setFormFocus(idx int) {
 	m.formFocus = idx
 }
 
-func (m *Model) openAddSubject() {
-	inputWidth := m.modalInputWidth()
-	fields := []formField{
-		newFormField("Code", inputWidth, true),
-		newFormField("Name", inputWidth, true),
+func buildForm(specs []formSpec, width int) []formField {
+	fields := make([]formField, 0, len(specs))
+	for _, spec := range specs {
+		fields = append(fields, newFormField(spec.label, width, spec.required))
 	}
+	return fields
+}
+
+func setFormValues(fields []formField, values ...string) {
+	for i := 0; i < len(fields) && i < len(values); i++ {
+		fields[i].input.SetValue(values[i])
+	}
+}
+
+func (m *Model) openAddSubject() {
+	fields := buildForm(subjectFormSpec, m.modalInputWidth())
 	m.openFormModal(modalAddSubject, "Add Subject", fields)
 }
 
 func (m *Model) openAddExam() {
-	inputWidth := m.modalInputWidth()
-	fields := []formField{
-		newFormField("Subject", inputWidth, true),
-		newFormField("Exam Name", inputWidth, true),
-		newFormField("Date", inputWidth, true),
-		newFormField("Retakes", inputWidth, false),
-		newFormField("Priority", inputWidth, false),
-	}
+	fields := buildForm(examFormSpec, m.modalInputWidth())
 	m.openFormModal(modalAddExam, "Add Exam", fields)
 }
 
 func (m *Model) openAddProject() {
-	inputWidth := m.modalInputWidth()
-	fields := []formField{
-		newFormField("Name", inputWidth, true),
-		newFormField("Subject", inputWidth, true),
-		newFormField("Deadline", inputWidth, true),
-		newFormField("Status", inputWidth, false),
-	}
+	fields := buildForm(projectFormSpec, m.modalInputWidth())
 	m.openFormModal(modalAddProject, "Add Project", fields)
 }
 
 func (m *Model) openAddTodo() {
-	inputWidth := m.modalInputWidth()
-	fields := []formField{
-		newFormField("Task", inputWidth, true),
-	}
+	fields := buildForm(todoFormSpec, m.modalInputWidth())
 	m.openFormModal(modalAddTodo, "Add Todo", fields)
 }
 
@@ -199,13 +224,8 @@ func (m *Model) openEditSubject() {
 		return
 	}
 	subj := m.subjects[m.selectedSubj]
-	inputWidth := m.modalInputWidth()
-	fields := []formField{
-		newFormField("Code", inputWidth, true),
-		newFormField("Name", inputWidth, true),
-	}
-	fields[0].input.SetValue(subj.Code)
-	fields[1].input.SetValue(subj.Name)
+	fields := buildForm(subjectFormSpec, m.modalInputWidth())
+	setFormValues(fields, subj.Code, subj.Name)
 	m.editSubjectIdx = m.selectedSubj
 	m.openFormModal(modalEditSubject, "Edit Subject", fields)
 }
@@ -216,17 +236,8 @@ func (m *Model) openEditExam() {
 		return
 	}
 	exam := exams[m.examCursor]
-	inputWidth := m.modalInputWidth()
-	fields := []formField{
-		newFormField("Exam Name", inputWidth, true),
-		newFormField("Date", inputWidth, true),
-		newFormField("Retakes", inputWidth, false),
-		newFormField("Priority", inputWidth, false),
-	}
-	fields[0].input.SetValue(exam.Name)
-	fields[1].input.SetValue(exam.Date)
-	fields[2].input.SetValue(strings.Join(exam.Retakes, ", "))
-	fields[3].input.SetValue(exam.Priority)
+	fields := buildForm(examFormSpec[1:], m.modalInputWidth())
+	setFormValues(fields, exam.Name, exam.Date, strings.Join(exam.Retakes, ", "), exam.Priority)
 	m.editSubjectIdx = m.selectedSubj
 	m.editExamIdx = m.examCursor
 	m.openFormModal(modalEditExam, "Edit Exam", fields)
@@ -237,17 +248,8 @@ func (m *Model) openEditProject() {
 		return
 	}
 	project := m.projects[m.projectCursor]
-	inputWidth := m.modalInputWidth()
-	fields := []formField{
-		newFormField("Name", inputWidth, true),
-		newFormField("Subject", inputWidth, true),
-		newFormField("Deadline", inputWidth, true),
-		newFormField("Status", inputWidth, false),
-	}
-	fields[0].input.SetValue(project.Name)
-	fields[1].input.SetValue(project.Subject)
-	fields[2].input.SetValue(project.Due)
-	fields[3].input.SetValue(project.Status)
+	fields := buildForm(projectFormSpec, m.modalInputWidth())
+	setFormValues(fields, project.Name, project.Subject, project.Due, project.Status)
 	m.editProjectIdx = m.projectCursor
 	m.openFormModal(modalEditProject, "Edit Project", fields)
 }
@@ -257,21 +259,15 @@ func (m *Model) openEditTodo() {
 		return
 	}
 	item := m.checklistItems[m.checklistCursor]
-	inputWidth := m.modalInputWidth()
-	fields := []formField{
-		newFormField("Task", inputWidth, true),
-	}
-	fields[0].input.SetValue(item.Text)
+	fields := buildForm(todoFormSpec, m.modalInputWidth())
+	setFormValues(fields, item.Text)
 	m.editTodoIdx = m.checklistCursor
 	m.openFormModal(modalEditTodo, "Edit Todo", fields)
 }
 
 func (m *Model) openEditLofiURL() {
-	inputWidth := m.modalInputWidth()
-	fields := []formField{
-		newFormField("Playlist URL", inputWidth, true),
-	}
-	fields[0].input.SetValue(m.lofi.url)
+	fields := buildForm(lofiFormSpec, m.modalInputWidth())
+	setFormValues(fields, m.lofi.url)
 	m.openFormModal(modalEditLofiURL, "Edit Lofi Playlist", fields)
 }
 
@@ -300,66 +296,114 @@ func newFormField(label string, width int, required bool) formField {
 	}
 }
 
-func (m *Model) submitForm() error {
-	switch m.modal {
-	case modalAddSubject:
-		code := strings.TrimSpace(m.formFields[0].input.Value())
-		name := strings.TrimSpace(m.formFields[1].input.Value())
-		if code == "" || name == "" {
-			return fmt.Errorf("Code and Name are required.")
-		}
+func (m *Model) formValue(idx int) string {
+	if idx < 0 || idx >= len(m.formFields) {
+		return ""
+	}
+	return strings.TrimSpace(m.formFields[idx].input.Value())
+}
+
+func (m *Model) saveSubject(idx int, code, name string) error {
+	if code == "" || name == "" {
+		return fmt.Errorf("Code and Name are required.")
+	}
+	if idx < 0 {
 		m.subjects = append(m.subjects, domain.SubjectItem{Code: code, Name: name})
 		m.selectedSubj = len(m.subjects) - 1
 		m.persist()
-	case modalAddExam:
-		subjectCode := strings.TrimSpace(m.formFields[0].input.Value())
-		examName := strings.TrimSpace(m.formFields[1].input.Value())
-		date := strings.TrimSpace(m.formFields[2].input.Value())
-		retakesRaw := strings.TrimSpace(m.formFields[3].input.Value())
-		priority := strings.TrimSpace(m.formFields[4].input.Value())
-		if subjectCode == "" || examName == "" || date == "" {
-			return fmt.Errorf("Subject, Exam Name, and Date are required.")
-		}
-		idx := findSubjectIndex(m.subjects, subjectCode)
-		if idx < 0 {
-			return fmt.Errorf("Subject code not found.")
-		}
-		retakes := splitCSV(retakesRaw)
-		m.subjects[idx].Exams = append(m.subjects[idx].Exams, domain.ExamItem{
-			Name:     examName,
-			Date:     date,
-			Retakes:  retakes,
-			Priority: strings.ToUpper(priority),
-		})
-		m.selectedSubj = idx
-		m.examCursor = len(m.subjects[idx].Exams) - 1
-		m.sortExamsByPriority()
-		m.persist()
-	case modalAddProject:
-		name := strings.TrimSpace(m.formFields[0].input.Value())
-		subject := strings.TrimSpace(m.formFields[1].input.Value())
-		deadline := strings.TrimSpace(m.formFields[2].input.Value())
-		status := strings.TrimSpace(m.formFields[3].input.Value())
-		if name == "" || subject == "" || deadline == "" {
-			return fmt.Errorf("Name, Subject, and Deadline are required.")
-		}
-		if status == "" {
-			status = domain.ProjectStatusNotStarted
-		}
+		return nil
+	}
+	if idx >= len(m.subjects) {
+		return nil
+	}
+	m.subjects[idx].Code = code
+	m.subjects[idx].Name = name
+	m.persist()
+	return nil
+}
+
+func (m *Model) addExam(subjectCode, examName, date, retakesRaw, priority string) error {
+	if subjectCode == "" || examName == "" || date == "" {
+		return fmt.Errorf("Subject, Exam Name, and Date are required.")
+	}
+	idx := findSubjectIndex(m.subjects, subjectCode)
+	if idx < 0 {
+		return fmt.Errorf("Subject code not found.")
+	}
+	retakes := splitCSV(retakesRaw)
+	m.subjects[idx].Exams = append(m.subjects[idx].Exams, domain.ExamItem{
+		Name:     examName,
+		Date:     date,
+		Retakes:  retakes,
+		Priority: strings.ToUpper(priority),
+	})
+	m.selectedSubj = idx
+	m.examCursor = len(m.subjects[idx].Exams) - 1
+	m.sortExamsByPriority()
+	m.persist()
+	return nil
+}
+
+func (m *Model) updateExam(subjectIdx, examIdx int, examName, date, retakesRaw, priority string) error {
+	if subjectIdx < 0 || subjectIdx >= len(m.subjects) {
+		return nil
+	}
+	exams := m.subjects[subjectIdx].Exams
+	if examIdx < 0 || examIdx >= len(exams) {
+		return nil
+	}
+	if examName == "" || date == "" {
+		return fmt.Errorf("Exam Name and Date are required.")
+	}
+	exams[examIdx].Name = examName
+	exams[examIdx].Date = date
+	exams[examIdx].Retakes = splitCSV(retakesRaw)
+	exams[examIdx].Priority = strings.ToUpper(priority)
+	m.subjects[subjectIdx].Exams = exams
+	m.examCursor = examIdx
+	m.sortExamsByPriority()
+	m.persist()
+	return nil
+}
+
+func (m *Model) saveProject(idx int, name, subject, deadline, status string) error {
+	if name == "" || subject == "" || deadline == "" {
+		return fmt.Errorf("Name, Subject, and Deadline are required.")
+	}
+	if status == "" {
+		status = domain.ProjectStatusNotStarted
+	}
+	status = strings.ToUpper(status)
+	if idx < 0 {
 		m.projects = append(m.projects, domain.ProjectItem{
 			Name:    name,
 			Subject: subject,
 			Due:     deadline,
-			Status:  strings.ToUpper(status),
+			Status:  status,
 		})
 		m.projectCursor = len(m.projects) - 1
 		m.sortProjectsByStatus()
 		m.persist()
-	case modalAddTodo:
-		task := strings.TrimSpace(m.formFields[0].input.Value())
-		if task == "" {
-			return fmt.Errorf("Task is required.")
-		}
+		return nil
+	}
+	if idx >= len(m.projects) {
+		return nil
+	}
+	m.projects[idx].Name = name
+	m.projects[idx].Subject = subject
+	m.projects[idx].Due = deadline
+	m.projects[idx].Status = status
+	m.projectCursor = idx
+	m.sortProjectsByStatus()
+	m.persist()
+	return nil
+}
+
+func (m *Model) saveTodo(idx int, task string) error {
+	if task == "" {
+		return fmt.Errorf("Task is required.")
+	}
+	if idx < 0 {
 		m.checklistItems = append(m.checklistItems, domain.ChecklistItem{
 			Text: task,
 			Done: false,
@@ -369,76 +413,38 @@ func (m *Model) submitForm() error {
 		m.sortChecklistByDone()
 		m.persist()
 		m.refreshChecklistView()
+		return nil
+	}
+	if idx >= len(m.checklistItems) {
+		return nil
+	}
+	m.checklistItems[idx].Text = task
+	m.sortChecklistByDone()
+	m.persist()
+	m.refreshChecklistView()
+	return nil
+}
+
+func (m *Model) submitForm() error {
+	switch m.modal {
+	case modalAddSubject:
+		return m.saveSubject(-1, m.formValue(0), m.formValue(1))
+	case modalAddExam:
+		return m.addExam(m.formValue(0), m.formValue(1), m.formValue(2), m.formValue(3), m.formValue(4))
+	case modalAddProject:
+		return m.saveProject(-1, m.formValue(0), m.formValue(1), m.formValue(2), m.formValue(3))
+	case modalAddTodo:
+		return m.saveTodo(-1, m.formValue(0))
 	case modalEditSubject:
-		if m.editSubjectIdx < 0 || m.editSubjectIdx >= len(m.subjects) {
-			return nil
-		}
-		code := strings.TrimSpace(m.formFields[0].input.Value())
-		name := strings.TrimSpace(m.formFields[1].input.Value())
-		if code == "" || name == "" {
-			return fmt.Errorf("Code and Name are required.")
-		}
-		m.subjects[m.editSubjectIdx].Code = code
-		m.subjects[m.editSubjectIdx].Name = name
-		m.persist()
+		return m.saveSubject(m.editSubjectIdx, m.formValue(0), m.formValue(1))
 	case modalEditExam:
-		if m.editSubjectIdx < 0 || m.editSubjectIdx >= len(m.subjects) {
-			return nil
-		}
-		exams := m.subjects[m.editSubjectIdx].Exams
-		if m.editExamIdx < 0 || m.editExamIdx >= len(exams) {
-			return nil
-		}
-		examName := strings.TrimSpace(m.formFields[0].input.Value())
-		date := strings.TrimSpace(m.formFields[1].input.Value())
-		retakesRaw := strings.TrimSpace(m.formFields[2].input.Value())
-		priority := strings.TrimSpace(m.formFields[3].input.Value())
-		if examName == "" || date == "" {
-			return fmt.Errorf("Exam Name and Date are required.")
-		}
-		exams[m.editExamIdx].Name = examName
-		exams[m.editExamIdx].Date = date
-		exams[m.editExamIdx].Retakes = splitCSV(retakesRaw)
-		exams[m.editExamIdx].Priority = strings.ToUpper(priority)
-		m.subjects[m.editSubjectIdx].Exams = exams
-		m.examCursor = m.editExamIdx
-		m.sortExamsByPriority()
-		m.persist()
+		return m.updateExam(m.editSubjectIdx, m.editExamIdx, m.formValue(0), m.formValue(1), m.formValue(2), m.formValue(3))
 	case modalEditProject:
-		if m.editProjectIdx < 0 || m.editProjectIdx >= len(m.projects) {
-			return nil
-		}
-		name := strings.TrimSpace(m.formFields[0].input.Value())
-		subject := strings.TrimSpace(m.formFields[1].input.Value())
-		deadline := strings.TrimSpace(m.formFields[2].input.Value())
-		status := strings.TrimSpace(m.formFields[3].input.Value())
-		if name == "" || subject == "" || deadline == "" {
-			return fmt.Errorf("Name, Subject, and Deadline are required.")
-		}
-		if status == "" {
-			status = domain.ProjectStatusNotStarted
-		}
-		m.projects[m.editProjectIdx].Name = name
-		m.projects[m.editProjectIdx].Subject = subject
-		m.projects[m.editProjectIdx].Due = deadline
-		m.projects[m.editProjectIdx].Status = strings.ToUpper(status)
-		m.projectCursor = m.editProjectIdx
-		m.sortProjectsByStatus()
-		m.persist()
+		return m.saveProject(m.editProjectIdx, m.formValue(0), m.formValue(1), m.formValue(2), m.formValue(3))
 	case modalEditTodo:
-		if m.editTodoIdx < 0 || m.editTodoIdx >= len(m.checklistItems) {
-			return nil
-		}
-		task := strings.TrimSpace(m.formFields[0].input.Value())
-		if task == "" {
-			return fmt.Errorf("Task is required.")
-		}
-		m.checklistItems[m.editTodoIdx].Text = task
-		m.sortChecklistByDone()
-		m.persist()
-		m.refreshChecklistView()
+		return m.saveTodo(m.editTodoIdx, m.formValue(0))
 	case modalEditLofiURL:
-		url := strings.TrimSpace(m.formFields[0].input.Value())
+		url := m.formValue(0)
 		if url == "" {
 			return fmt.Errorf("Playlist URL is required.")
 		}

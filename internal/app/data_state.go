@@ -37,7 +37,6 @@ func (m *Model) applyData(data storage.SemesterData) {
 	if m.projectCursor < 0 {
 		m.projectCursor = 0
 	}
-	m.refreshExamFilter()
 	if m.lofiNow >= len(m.lofiPlaylist) {
 		m.lofiNow = len(m.lofiPlaylist) - 1
 	}
