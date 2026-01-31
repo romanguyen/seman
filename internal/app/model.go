@@ -6,8 +6,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/storage"
+	"seman/internal/domain"
+	"seman/internal/storage"
 )
 
 type Model struct {

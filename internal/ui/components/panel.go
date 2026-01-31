@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/layout"
+	"seman/internal/style"
+	"seman/internal/ui/layout"
 )
 
 func RenderPanel(width, height int, title, body string, t style.Theme) string {

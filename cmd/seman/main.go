@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/app"
-	"student-exams-manager/internal/storage"
+	"seman/internal/app"
+	"seman/internal/storage"
 )
 
 func main() {
@@ -38,7 +38,7 @@ func resolveDataPath(flagValue string) (string, error) {
 	if flagValue != "" {
 		return flagValue, nil
 	}
-	if value := os.Getenv("STUDENT_EXAMS_DATA"); value != "" {
+	if value := os.Getenv("SEMAN_DATA"); value != "" {
 		return value, nil
 	}
 	dataDir, err := storage.DataDir()

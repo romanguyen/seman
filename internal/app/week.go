@@ -3,7 +3,7 @@ package app
 import (
 	"time"
 
-	"student-exams-manager/internal/domain"
+	"seman/internal/domain"
 )
 
 func (m *Model) setWeekStartFromData(value string) {

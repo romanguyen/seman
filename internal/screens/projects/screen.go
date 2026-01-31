@@ -1,10 +1,10 @@
 package projects
 
 import (
-	"student-exams-manager/internal/screens"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/components"
-	"student-exams-manager/internal/ui/layout"
+	"seman/internal/screens"
+	"seman/internal/style"
+	"seman/internal/ui/components"
+	"seman/internal/ui/layout"
 )
 
 func Render(state screens.State, width, height int, t style.Theme) string {

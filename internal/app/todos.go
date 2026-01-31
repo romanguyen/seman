@@ -3,9 +3,9 @@ package app
 import (
 	"strings"
 
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/components"
+	"seman/internal/domain"
+	"seman/internal/style"
+	"seman/internal/ui/components"
 )
 
 func (m *Model) refreshChecklistView() {

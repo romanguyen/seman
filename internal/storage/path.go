@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-const appName = "student-exams-manager"
+const appName = "seman"
 
 func DataDir() (string, error) {
 	dataRoot := os.Getenv("XDG_DATA_HOME")

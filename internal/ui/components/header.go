@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/layout"
+	"seman/internal/domain"
+	"seman/internal/style"
+	"seman/internal/ui/layout"
 )
 
 func RenderHeader(width int, t style.Theme) string {
@@ -15,7 +15,7 @@ func RenderHeader(width int, t style.Theme) string {
 		contentWidth = 1
 	}
 
-	title := t.Title.Render("Student Manager")
+	title := t.Title.Render("Seman")
 	date := t.Dim.Render(domain.FormatDate(time.Now()))
 	content := AlignLine(contentWidth, title, date)
 

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/style"
+	"seman/internal/domain"
+	"seman/internal/style"
 )
 
 type upcomingExam struct {

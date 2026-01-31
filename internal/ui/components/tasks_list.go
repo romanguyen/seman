@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/style"
+	"seman/internal/domain"
+	"seman/internal/style"
 )
 
 func RenderChecklist(items []domain.ChecklistItem, selected int, showCursor bool, t style.Theme) string {

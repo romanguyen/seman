@@ -3,8 +3,8 @@ package app
 import (
 	"strings"
 
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/storage"
+	"seman/internal/domain"
+	"seman/internal/storage"
 )
 
 func (m *Model) applyData(data storage.SemesterData) {

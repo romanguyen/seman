@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/ui/components"
+	"seman/internal/domain"
+	"seman/internal/ui/components"
 )
 
 type State struct {

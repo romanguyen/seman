@@ -6,9 +6,9 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/layout"
+	"seman/internal/domain"
+	"seman/internal/style"
+	"seman/internal/ui/layout"
 )
 
 type modalKind int

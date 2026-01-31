@@ -1,6 +1,6 @@
 package app
 
-import "student-exams-manager/internal/ui/layout"
+import "seman/internal/ui/layout"
 
 func (m *Model) resize(width, height int) {
 	m.width = width

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
+	"seman/internal/style"
 )
 
 type TabItem struct {

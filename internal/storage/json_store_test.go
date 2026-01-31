@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"student-exams-manager/internal/domain"
+	"seman/internal/domain"
 )
 
 func TestJSONStoreLoadMissing(t *testing.T) {

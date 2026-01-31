@@ -1,4 +1,4 @@
-Student Exams Manager (Go TUI)
+Seman (Go TUI)
 
 A terminal UI to track subjects/exams, projects, and todos with a weekly view. Includes an optional Lofi player tab.
 
@@ -8,24 +8,24 @@ Requirements
 
 Install
 - Run without installing:
-  - go run ./cmd/student-exams-manager
+  - go run ./cmd/seman
 - Build a local binary:
-  - go build -o student-exams-manager ./cmd/student-exams-manager
+  - go build -o seman ./cmd/seman
 - Install to ~/.local/bin:
   - ./install.sh
   - Note: add ~/.local/bin to your PATH if needed.
 
 Usage
 - Default:
-  - student-exams-manager
+  - seman
 - Custom data path:
-  - student-exams-manager -data /path/to/semester.json
-  - STUDENT_EXAMS_DATA=/path/to/semester.json student-exams-manager
+  - seman -data /path/to/semester.json
+  - SEMAN_DATA=/path/to/semester.json seman
   - Flag takes precedence over env var.
 
 Data storage
-- Default directory: $XDG_DATA_HOME/student-exams-manager
-- Fallback directory: $HOME/.local/share/student-exams-manager
+- Default directory: $XDG_DATA_HOME/seman
+- Fallback directory: $HOME/.local/share/seman
 - File name: semester.json
 - The file is created on first save.
 - The app starts with empty data when no file exists.

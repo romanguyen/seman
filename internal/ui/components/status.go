@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/style"
+	"seman/internal/domain"
+	"seman/internal/style"
 )
 
 func RenderStatusBadge(status string, width int, t style.Theme) string {

@@ -2,8 +2,8 @@ package screens
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/components"
+	"seman/internal/style"
+	"seman/internal/ui/components"
 )
 
 func RenderPlaceholder(width, height int, t style.Theme) string {

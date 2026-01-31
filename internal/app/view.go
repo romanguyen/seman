@@ -3,16 +3,16 @@ package app
 import (
 	"strings"
 
-	"student-exams-manager/internal/screens"
-	"student-exams-manager/internal/screens/dashboard"
-	"student-exams-manager/internal/screens/lofi"
-	"student-exams-manager/internal/screens/projects"
-	"student-exams-manager/internal/screens/semester"
-	"student-exams-manager/internal/screens/settings"
-	"student-exams-manager/internal/screens/todo"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/components"
-	"student-exams-manager/internal/ui/layout"
+	"seman/internal/screens"
+	"seman/internal/screens/dashboard"
+	"seman/internal/screens/lofi"
+	"seman/internal/screens/projects"
+	"seman/internal/screens/semester"
+	"seman/internal/screens/settings"
+	"seman/internal/screens/todo"
+	"seman/internal/style"
+	"seman/internal/ui/components"
+	"seman/internal/ui/layout"
 )
 
 func (m Model) View() string {

@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/layout"
+	"seman/internal/style"
+	"seman/internal/ui/layout"
 )
 
 type ModalMode int

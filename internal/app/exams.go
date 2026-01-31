@@ -1,6 +1,6 @@
 package app
 
-import "student-exams-manager/internal/domain"
+import "seman/internal/domain"
 
 func (m *Model) refreshExamFilter() {
 	exams := m.examsForSelected()

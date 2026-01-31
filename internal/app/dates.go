@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"student-exams-manager/internal/domain"
+	"seman/internal/domain"
 )
 
 func weekStartOf(t time.Time) time.Time {

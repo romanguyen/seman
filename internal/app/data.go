@@ -1,6 +1,6 @@
 package app
 
-import "student-exams-manager/internal/storage"
+import "seman/internal/storage"
 
 func DefaultData() storage.SemesterData {
 	return storage.SemesterData{}

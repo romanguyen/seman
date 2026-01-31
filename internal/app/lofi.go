@@ -12,7 +12,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/domain"
+	"seman/internal/domain"
 )
 
 const (

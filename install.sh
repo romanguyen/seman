@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-app_name="student-exams-manager"
+app_name="seman"
 bin_dir="$HOME/.local/bin"
 bin_path="$bin_dir/$app_name"
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)

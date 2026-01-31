@@ -1,6 +1,6 @@
 package storage
 
-import "student-exams-manager/internal/domain"
+import "seman/internal/domain"
 
 type SemesterData struct {
 	Subjects    []domain.SubjectItem   `json:"subjects"`

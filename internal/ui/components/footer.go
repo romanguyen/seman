@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/layout"
+	"seman/internal/style"
+	"seman/internal/ui/layout"
 )
 
 func RenderFooter(width, tabCount, activeTab int, status string, t style.Theme) string {

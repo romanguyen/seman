@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"student-exams-manager/internal/domain"
-	"student-exams-manager/internal/style"
+	"seman/internal/domain"
+	"seman/internal/style"
 )
 
 func RenderProjectsTable(items []domain.ProjectItem, selected, width int, t style.Theme) string {
