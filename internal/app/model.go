@@ -155,12 +155,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.openAddForTab() {
 				return m, nil
 			}
-		case "s", "S":
-			m.openAddSubject()
-			return m, nil
-		case "p", "P":
-			m.openAddProject()
-			return m, nil
 		case "e", "E":
 			m.openEditCurrent()
 			return m, nil
