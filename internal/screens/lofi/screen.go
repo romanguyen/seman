@@ -1,16 +1,18 @@
-package screens
+package lofi
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/models"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/components"
+	"seman/internal/domain"
+	"seman/internal/screens"
+	"seman/internal/style"
+	"seman/internal/ui/components"
+	"seman/internal/ui/layout"
 )
 
-func RenderLofi(state State, width, height int, t style.Theme) string {
+func Render(state screens.State, width, height int, t style.Theme) string {
 	if !state.LofiEnabled {
 		body := t.Dim.Render("Enable the Lofi tab in Settings to use the player.")
 		return components.RenderPanel(width, height, "Lofi Player", body, t)
@@ -40,7 +42,7 @@ func RenderLofi(state State, width, height int, t style.Theme) string {
 		title = "No track selected"
 	}
 	if note == "" {
-		note = "Press Enter to play the selected track"
+		note = "Use the controls below to start playback"
 	}
 
 	status := state.LofiStatus
@@ -54,13 +56,13 @@ func RenderLofi(state State, width, height int, t style.Theme) string {
 		note,
 		"Status: " + status,
 		"",
-		buildLofiControls(state.LofiStatus, components.PanelContentWidth(playerWidth), t),
+		buildLofiControls(state.LofiStatus, layout.PanelContentWidth(playerWidth), t),
 	}
 	if state.LofiError != "" {
 		topLines = append(topLines, "", state.LofiError)
 	}
 
-	topContentW := components.PanelContentWidth(playerWidth)
+	topContentW := layout.PanelContentWidth(playerWidth)
 	centered := make([]string, 0, len(topLines))
 	for i, line := range topLines {
 		if i == 5 {
@@ -84,15 +86,15 @@ func RenderLofi(state State, width, height int, t style.Theme) string {
 		return playerPanel
 	}
 
-	_, playlistContentH := components.PanelContentSize(playlistWidth, height)
+	_, playlistContentH := layout.PanelContentSize(playlistWidth, height)
 	if playlistContentH < 1 {
 		playlistContentH = 1
 	}
-	maxLines := models.LofiVisibleCap*2 - 1
+	maxLines := domain.LofiVisibleCap*2 - 1
 	if playlistContentH > maxLines {
 		playlistContentH = maxLines
 	}
-	playlistBody := renderLofiPlaylist(state.LofiPlaylist, state.LofiCursor, state.LofiOffset, playlistContentH, playlistWidth, t)
+	playlistBody := renderLofiPlaylist(state.LofiPlaylist, state.LofiCursor, 0, playlistContentH, playlistWidth, t)
 	playlistPanel := components.RenderPanel(playlistWidth, height, "Playlist", playlistBody, t)
 
 	if gap > 0 {
@@ -123,7 +125,7 @@ func buildLofiControls(status string, width int, t style.Theme) string {
 	return lipgloss.NewStyle().Width(width).Align(lipgloss.Center).Render(line)
 }
 
-func currentLofiInfo(state State) (string, string) {
+func currentLofiInfo(state screens.State) (string, string) {
 	idx := state.LofiNow
 	if idx < 0 || idx >= len(state.LofiPlaylist) {
 		idx = state.LofiCursor
@@ -135,12 +137,12 @@ func currentLofiInfo(state State) (string, string) {
 	return item.Title, item.Note
 }
 
-func renderLofiPlaylist(items []models.LofiTrack, cursor, offset, visibleLines, width int, t style.Theme) string {
+func renderLofiPlaylist(items []domain.LofiTrack, cursor, offset, visibleLines, width int, t style.Theme) string {
 	if len(items) == 0 {
 		return t.Dim.Render("No playlist items yet.")
 	}
 
-	contentW := components.PanelContentWidth(width)
+	contentW := layout.PanelContentWidth(width)
 	lines := make([]string, 0, len(items)*2-1)
 	for i, item := range items {
 		left := t.Text.Render(fmt.Sprintf("[%d] %s", i+1, item.Title))

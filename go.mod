@@ -1,4 +1,4 @@
-module student-exams-manager
+module seman
 
 go 1.21
 

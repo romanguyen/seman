@@ -3,7 +3,7 @@ package components
 import (
 	"strings"
 
-	"student-exams-manager/internal/style"
+	"seman/internal/style"
 )
 
 func RenderDivider(width int, t style.Theme) string {

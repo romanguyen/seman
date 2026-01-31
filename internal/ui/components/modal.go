@@ -5,7 +5,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
+	"seman/internal/style"
+	"seman/internal/ui/layout"
 )
 
 type ModalMode int
@@ -36,7 +37,7 @@ func RenderModalArea(state ModalState, width, height int, t style.Theme) string 
 }
 
 func RenderModal(state ModalState, width int, t style.Theme) string {
-	modalW := minInt(70, width-6)
+	modalW := layout.MinInt(70, width-6)
 	if modalW < 42 {
 		modalW = 42
 	}

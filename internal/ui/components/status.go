@@ -4,18 +4,19 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
+	"seman/internal/domain"
+	"seman/internal/style"
 )
 
 func RenderStatusBadge(status string, width int, t style.Theme) string {
 	label := strings.ToUpper(status)
 	style := t.StatusNotStr
 	switch label {
-	case "DONE":
+	case domain.ProjectStatusDone:
 		style = t.StatusDone
-	case "IN PROGRESS":
+	case domain.ProjectStatusInProgress:
 		style = t.StatusInProg
-	case "NOT STARTED":
+	case domain.ProjectStatusNotStarted:
 		style = t.StatusNotStr
 	}
 	badge := style.Render(label)
@@ -28,11 +29,11 @@ func RenderStatusBadge(status string, width int, t style.Theme) string {
 func RenderPriority(priority string) string {
 	style := lipgloss.NewStyle().Padding(0, 1).Bold(true)
 	switch strings.ToUpper(priority) {
-	case "HIGH":
+	case domain.PriorityHigh:
 		style = style.Foreground(lipgloss.Color("#0c0c0c")).Background(lipgloss.Color("#ff5f5f"))
-	case "MED":
+	case domain.PriorityMed:
 		style = style.Foreground(lipgloss.Color("#0c0c0c")).Background(lipgloss.Color("#d4a017"))
-	case "LOW":
+	case domain.PriorityLow:
 		style = style.Foreground(lipgloss.Color("#0c0c0c")).Background(lipgloss.Color("#3a7f3a"))
 	default:
 		style = style.Foreground(lipgloss.Color("#0c0c0c")).Background(lipgloss.Color("#39ff14"))

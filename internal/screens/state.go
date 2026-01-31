@@ -3,34 +3,33 @@ package screens
 import (
 	"time"
 
-	"student-exams-manager/internal/models"
-	"student-exams-manager/internal/ui/components"
+	"github.com/charmbracelet/bubbles/viewport"
+	"seman/internal/domain"
+	"seman/internal/ui/components"
 )
 
 type State struct {
 	ActiveTab     int
 	ConfirmOn     bool
-	ChecklistView string
-	Projects      []models.ProjectItem
-	Subjects      []models.SubjectItem
+	Checklist     viewport.Model
+	Projects      []domain.ProjectItem
+	Subjects      []domain.SubjectItem
 	SelectedSubj  int
 	ExamCursor    int
-	FilteredExams []models.ExamItem
+	FilteredExams []domain.ExamItem
 	FocusExams    bool
 	WeekLabel     string
 	FilterStart   time.Time
 	FilterEnd     time.Time
 	FilterAll     bool
 	WeekSpan      int
-	WeeklyExams   []string
 	ProjectCursor int
 	LofiEnabled   bool
 	LofiURL       string
 	LofiStatus    string
 	LofiError     string
-	LofiPlaylist  []models.LofiTrack
+	LofiPlaylist  []domain.LofiTrack
 	LofiCursor    int
-	LofiOffset    int
 	LofiNow       int
 	Modal         components.ModalState
 }

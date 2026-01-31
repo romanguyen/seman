@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"student-exams-manager/internal/models"
-	"student-exams-manager/internal/style"
+	"seman/internal/domain"
+	"seman/internal/style"
 )
 
-func RenderSubjects(items []models.SubjectItem, selected int, t style.Theme) string {
+func RenderSubjects(items []domain.SubjectItem, selected int, t style.Theme) string {
 	if len(items) == 0 {
 		return t.Dim.Render("No subjects yet")
 	}
@@ -35,7 +35,7 @@ func RenderSubjects(items []models.SubjectItem, selected int, t style.Theme) str
 	return b.String()
 }
 
-func RenderSubjectTitle(items []models.SubjectItem, selected int, t style.Theme) string {
+func RenderSubjectTitle(items []domain.SubjectItem, selected int, t style.Theme) string {
 	if selected < 0 || selected >= len(items) {
 		return ""
 	}
@@ -44,7 +44,7 @@ func RenderSubjectTitle(items []models.SubjectItem, selected int, t style.Theme)
 	return t.Title.Render(title)
 }
 
-func RenderExamList(exams []models.ExamItem, examIdx int, highlight bool, t style.Theme) string {
+func RenderExamList(exams []domain.ExamItem, examIdx int, highlight bool, t style.Theme) string {
 	if len(exams) == 0 {
 		return t.Dim.Render("No exams this week")
 	}
@@ -62,15 +62,23 @@ func RenderExamList(exams []models.ExamItem, examIdx int, highlight bool, t styl
 		}
 		b.WriteString(nameStyle.Render(prefix + exam.Name))
 		if exam.Date != "" {
+			label := exam.Date
+			if parsed, ok := domain.ParseExamDate(exam.Date); ok {
+				label = domain.FormatDate(parsed)
+			}
 			b.WriteString("\n")
-			b.WriteString(t.Dim.Render("Current date: " + exam.Date))
+			b.WriteString(t.Dim.Render("Current date: " + label))
 		}
 		if len(exam.Retakes) > 0 {
 			b.WriteString("\n")
 			b.WriteString(t.Dim.Render("Retake dates:"))
 			for _, date := range exam.Retakes {
+				label := date
+				if parsed, ok := domain.ParseExamDate(date); ok {
+					label = domain.FormatDate(parsed)
+				}
 				b.WriteString("\n")
-				b.WriteString(t.Dim.Render(" - " + date))
+				b.WriteString(t.Dim.Render(" - " + label))
 			}
 		}
 		if exam.Priority != "" {

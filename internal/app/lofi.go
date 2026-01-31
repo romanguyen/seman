@@ -12,7 +12,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/models"
+	"seman/internal/domain"
 )
 
 const (
@@ -36,7 +36,7 @@ type lofiExitMsg struct {
 }
 
 type lofiPlaylistMsg struct {
-	tracks []models.LofiTrack
+	tracks []domain.LofiTrack
 	err    error
 }
 
@@ -48,21 +48,6 @@ type lofiPlaybackMsg struct {
 	playing  bool
 	attempts int
 	err      error
-}
-
-func defaultLofiPlaylist() []models.LofiTrack {
-	return []models.LofiTrack{
-		{Title: "Lofi Hip Hop Radio - Beats to Study/Relax", Note: "Classic lofi beats"},
-		{Title: "ChillHop Radio - Jazzy & Lofi Hip Hop", Note: "Smooth jazzy lofi"},
-		{Title: "Lofi Girl - Sleep/Chill Radio", Note: "Calm beats for sleeping"},
-		{Title: "Coffee Shop Ambience", Note: "Cozy cafe vibes"},
-		{Title: "Rainy Day Lofi", Note: "Rain sounds with beats"},
-		{Title: "Midnight Lofi Mix", Note: "Late night study session"},
-		{Title: "Synthwave Lofi", Note: "Retro synth lofi beats"},
-		{Title: "Japanese Lofi", Note: "Traditional Japanese inspired"},
-		{Title: "Piano Lofi Collection", Note: "Soft piano melodies"},
-		{Title: "Chill Beats Vol. 1", Note: "Best chill collection"},
-	}
 }
 
 func (m *Model) toggleLofiEnabled() tea.Cmd {
@@ -81,20 +66,15 @@ func (m *Model) toggleLofiEnabled() tea.Cmd {
 	return nil
 }
 
-func (m *Model) moveLofiCursor(delta int) {
-	if len(m.lofiPlaylist) == 0 {
-		m.lofiCursor = 0
-		m.lofiOffset = 0
-		return
+func (m *Model) consumeLofiReload() tea.Cmd {
+	if !m.lofiReload {
+		return nil
 	}
-	m.lofiCursor += delta
-	if m.lofiCursor < 0 {
-		m.lofiCursor = 0
+	m.lofiReload = false
+	if strings.TrimSpace(m.lofi.url) == "" {
+		return nil
 	}
-	if m.lofiCursor >= len(m.lofiPlaylist) {
-		m.lofiCursor = len(m.lofiPlaylist) - 1
-	}
-	m.ensureLofiVisible()
+	return loadLofiPlaylist(m.lofi.url)
 }
 
 func (m *Model) applyLofiPlaylist(msg lofiPlaylistMsg) {
@@ -114,7 +94,6 @@ func (m *Model) applyLofiPlaylist(msg lofiPlaylistMsg) {
 	if m.lofiNow >= len(m.lofiPlaylist) || m.lofiNow < 0 {
 		m.lofiNow = 0
 	}
-	m.ensureLofiVisible()
 }
 
 func (m *Model) applyLofiIndex(msg lofiIndexMsg) tea.Cmd {
@@ -128,41 +107,6 @@ func (m *Model) applyLofiIndex(msg lofiIndexMsg) tea.Cmd {
 	m.lofi.status = lofiStatusLoading
 	m.lofi.err = ""
 	return m.pollLofiPlayback(0)
-}
-
-func (m *Model) ensureLofiVisible() {
-	if len(m.lofiPlaylist) == 0 {
-		m.lofiOffset = 0
-		return
-	}
-	visible := m.lofiListHeight
-	if visible < 1 {
-		m.lofiOffset = 0
-		return
-	}
-	maxLines := models.LofiVisibleCap*2 - 1
-	if visible > maxLines {
-		visible = maxLines
-	}
-	totalLines := len(m.lofiPlaylist)*2 - 1
-	if totalLines <= visible {
-		m.lofiOffset = 0
-		return
-	}
-	lineIdx := m.lofiCursor * 2
-	if lineIdx < m.lofiOffset {
-		m.lofiOffset = lineIdx
-	}
-	if lineIdx >= m.lofiOffset+visible {
-		m.lofiOffset = lineIdx - visible + 1
-	}
-	maxOffset := totalLines - visible
-	if m.lofiOffset > maxOffset {
-		m.lofiOffset = maxOffset
-	}
-	if m.lofiOffset < 0 {
-		m.lofiOffset = 0
-	}
 }
 
 func (m *Model) handleLofiExit(msg lofiExitMsg) {
@@ -206,7 +150,6 @@ func (m *Model) playLofiAt(index int) tea.Cmd {
 	}
 	m.lofiNow = index
 	m.lofiCursor = index
-	m.ensureLofiVisible()
 
 	var cmd tea.Cmd
 	if m.lofi.cmd == nil {
@@ -235,9 +178,34 @@ func (m *Model) pollLofiPlayback(attempts int) tea.Cmd {
 	})
 }
 
-func (m *Model) toggleLofiPlayPause() tea.Cmd {
+func (m *Model) validateLofiOrError() bool {
 	if err := m.validateLofi(); err != nil {
 		m.lofi.err = err.Error()
+		return false
+	}
+	return true
+}
+
+func (m *Model) ensureLofiReady() (tea.Cmd, bool) {
+	if !m.validateLofiOrError() {
+		return nil, true
+	}
+	if m.lofi.cmd == nil {
+		m.lofi.status = lofiStatusLoading
+		m.lofi.err = ""
+		return tea.Batch(m.startLofi(), m.pollLofiPlayback(0)), true
+	}
+	return nil, false
+}
+
+func (m *Model) setLofiLoadingAndPoll() tea.Cmd {
+	m.lofi.status = lofiStatusLoading
+	m.lofi.err = ""
+	return m.pollLofiPlayback(0)
+}
+
+func (m *Model) toggleLofiPlayPause() tea.Cmd {
+	if !m.validateLofiOrError() {
 		return nil
 	}
 	if m.lofiNow < 0 && len(m.lofiPlaylist) > 0 {
@@ -278,13 +246,8 @@ func (m *Model) toggleLofiPlayPause() tea.Cmd {
 }
 
 func (m *Model) lofiNext() tea.Cmd {
-	if err := m.validateLofi(); err != nil {
-		m.lofi.err = err.Error()
-		return nil
-	}
-	if m.lofi.cmd == nil {
-		m.lofi.status = lofiStatusLoading
-		return tea.Batch(m.startLofi(), m.pollLofiPlayback(0))
+	if cmd, handled := m.ensureLofiReady(); handled {
+		return cmd
 	}
 	if err := m.sendLofiCommand("playlist-next", "force"); err != nil {
 		m.lofi.err = err.Error()
@@ -293,21 +256,13 @@ func (m *Model) lofiNext() tea.Cmd {
 	if len(m.lofiPlaylist) > 0 && m.lofiNow < len(m.lofiPlaylist)-1 {
 		m.lofiNow++
 		m.lofiCursor = m.lofiNow
-		m.ensureLofiVisible()
 	}
-	m.lofi.status = lofiStatusLoading
-	m.lofi.err = ""
-	return m.pollLofiPlayback(0)
+	return m.setLofiLoadingAndPoll()
 }
 
 func (m *Model) lofiPrev() tea.Cmd {
-	if err := m.validateLofi(); err != nil {
-		m.lofi.err = err.Error()
-		return nil
-	}
-	if m.lofi.cmd == nil {
-		m.lofi.status = lofiStatusLoading
-		return tea.Batch(m.startLofi(), m.pollLofiPlayback(0))
+	if cmd, handled := m.ensureLofiReady(); handled {
+		return cmd
 	}
 	if err := m.sendLofiCommand("playlist-prev", "force"); err != nil {
 		m.lofi.err = err.Error()
@@ -316,11 +271,8 @@ func (m *Model) lofiPrev() tea.Cmd {
 	if len(m.lofiPlaylist) > 0 && m.lofiNow > 0 {
 		m.lofiNow--
 		m.lofiCursor = m.lofiNow
-		m.ensureLofiVisible()
 	}
-	m.lofi.status = lofiStatusLoading
-	m.lofi.err = ""
-	return m.pollLofiPlayback(0)
+	return m.setLofiLoadingAndPoll()
 }
 
 func (m *Model) lofiStop() {
@@ -389,10 +341,13 @@ func (m *Model) shutdownLofi() {
 
 func (m *Model) validateLofi() error {
 	if !m.lofi.enabled {
-		return fmt.Errorf("Enable Lofi in Settings first.")
+		return fmt.Errorf("enable Lofi in Settings first")
 	}
 	if strings.TrimSpace(m.lofi.url) == "" {
-		return fmt.Errorf("Set a playlist URL in Settings.")
+		return fmt.Errorf("set a playlist URL in Settings")
+	}
+	if _, err := exec.LookPath("mpv"); err != nil {
+		return fmt.Errorf("mpv not found; install mpv to enable Lofi playback")
 	}
 	return nil
 }
@@ -416,7 +371,10 @@ type ytPlaylist struct {
 	} `json:"entries"`
 }
 
-func fetchLofiPlaylist(url string) ([]models.LofiTrack, error) {
+func fetchLofiPlaylist(url string) ([]domain.LofiTrack, error) {
+	if _, err := exec.LookPath("yt-dlp"); err != nil {
+		return nil, fmt.Errorf("yt-dlp not found; install yt-dlp to load playlists")
+	}
 	cmd := exec.Command("yt-dlp", "--flat-playlist", "-J", url)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -427,9 +385,9 @@ func fetchLofiPlaylist(url string) ([]models.LofiTrack, error) {
 		return nil, fmt.Errorf("yt-dlp parse error: %v", err)
 	}
 	if len(payload.Entries) == 0 {
-		return nil, fmt.Errorf("Playlist is empty.")
+		return nil, fmt.Errorf("playlist is empty")
 	}
-	tracks := make([]models.LofiTrack, 0, len(payload.Entries))
+	tracks := make([]domain.LofiTrack, 0, len(payload.Entries))
 	for _, entry := range payload.Entries {
 		title := strings.TrimSpace(entry.Title)
 		if title == "" {
@@ -439,10 +397,10 @@ func fetchLofiPlaylist(url string) ([]models.LofiTrack, error) {
 		if note == "" {
 			note = strings.TrimSpace(entry.Channel)
 		}
-		tracks = append(tracks, models.LofiTrack{Title: title, Note: note})
+		tracks = append(tracks, domain.LofiTrack{Title: title, Note: note})
 	}
 	if len(tracks) == 0 {
-		return nil, fmt.Errorf("Playlist is empty.")
+		return nil, fmt.Errorf("playlist is empty")
 	}
 	return tracks, nil
 }
@@ -452,7 +410,9 @@ func (m *Model) sendLofiCommand(args ...any) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 	payload, err := json.Marshal(map[string]any{"command": args})
 	if err != nil {
 		return err
@@ -484,13 +444,15 @@ func (m *Model) isLofiPlaying() (bool, error) {
 
 func (m *Model) sendLofiRequest(args ...any) (mpvResponse, error) {
 	if m.lofi.socketPath == "" {
-		return mpvResponse{}, fmt.Errorf("Player not running.")
+		return mpvResponse{}, fmt.Errorf("player not running")
 	}
 	conn, err := net.Dial("unix", m.lofi.socketPath)
 	if err != nil {
 		return mpvResponse{}, err
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 	payload, err := json.Marshal(map[string]any{"command": args, "request_id": 1})
 	if err != nil {
 		return mpvResponse{}, err
@@ -513,7 +475,7 @@ func (m *Model) sendLofiRequest(args ...any) (mpvResponse, error) {
 
 func (m *Model) dialLofiSocket() (net.Conn, error) {
 	if m.lofi.socketPath == "" {
-		return nil, fmt.Errorf("Player not running.")
+		return nil, fmt.Errorf("player not running")
 	}
 	var lastErr error
 	for i := 0; i < 6; i++ {

@@ -1,20 +1,20 @@
-package components
+package layout
 
 const (
-	headerHeight  = 3
-	tabsHeight    = 3
-	footerHeight  = 3
-	dividerHeight = 1
+	HeaderHeight  = 3
+	TabsHeight    = 3
+	FooterHeight  = 3
+	DividerHeight = 1
 )
 
 const (
-	panelPaddingX = 2
-	panelPaddingY = 1
-	panelBorderX  = 2
-	panelBorderY  = 2
-	barPaddingX   = 1
-	barPaddingY   = 0
-	barBorderX    = 2
+	PanelPaddingX = 2
+	PanelPaddingY = 1
+	PanelBorderX  = 2
+	PanelBorderY  = 2
+	BarPaddingX   = 1
+	BarPaddingY   = 0
+	BarBorderX    = 2
 )
 
 type DashboardLayout struct {
@@ -31,7 +31,7 @@ type SemesterLayout struct {
 	RightWidth int
 }
 
-type WeeklyLayout struct {
+type TodoLayout struct {
 	LeftWidth     int
 	RightWidth    int
 	PanelsHeight  int
@@ -46,7 +46,7 @@ type ProjectsLayout struct {
 }
 
 func MainAreaHeight(totalHeight int) int {
-	used := headerHeight + tabsHeight + dividerHeight + dividerHeight + footerHeight
+	used := HeaderHeight + TabsHeight + DividerHeight + DividerHeight + FooterHeight
 	mainHeight := totalHeight - used
 	if mainHeight < 1 {
 		return 1
@@ -55,8 +55,8 @@ func MainAreaHeight(totalHeight int) int {
 }
 
 func PanelContentSize(width, height int) (int, int) {
-	contentW := width - panelBorderX - panelPaddingX*2
-	contentH := height - panelBorderY - panelPaddingY*2
+	contentW := width - PanelBorderX - PanelPaddingX*2
+	contentH := height - PanelBorderY - PanelPaddingY*2
 	if contentW < 0 {
 		contentW = 0
 	}
@@ -67,7 +67,7 @@ func PanelContentSize(width, height int) (int, int) {
 }
 
 func PanelContentWidth(width int) int {
-	contentW := width - panelBorderX - panelPaddingX*2
+	contentW := width - PanelBorderX - PanelPaddingX*2
 	if contentW < 1 {
 		contentW = 1
 	}
@@ -75,7 +75,7 @@ func PanelContentWidth(width int) int {
 }
 
 func PanelHeightForLines(lines int) int {
-	return lines + panelPaddingY*2 + panelBorderY
+	return lines + PanelPaddingY*2 + PanelBorderY
 }
 
 func ComputeDashboardLayout(width, height int) DashboardLayout {
@@ -127,7 +127,7 @@ func ComputeSemesterLayout(width, height int) SemesterLayout {
 	}
 }
 
-func ComputeWeeklyLayout(width, height int) WeeklyLayout {
+func ComputeTodoLayout(width, height int) TodoLayout {
 	available := width
 	if available < 0 {
 		available = 0
@@ -143,7 +143,7 @@ func ComputeWeeklyLayout(width, height int) WeeklyLayout {
 		actionsH--
 	}
 
-	return WeeklyLayout{
+	return TodoLayout{
 		LeftWidth:     leftWidth,
 		RightWidth:    rightWidth,
 		PanelsHeight:  panelsH,
@@ -162,4 +162,18 @@ func ComputeProjectsLayout(width, height int) ProjectsLayout {
 		TableWidth:  tableW,
 		TableHeight: tableH,
 	}
+}
+
+func MinInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func MaxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

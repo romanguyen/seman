@@ -1,12 +1,11 @@
 package storage
 
-import "student-exams-manager/internal/models"
+import "seman/internal/domain"
 
 type SemesterData struct {
-	Subjects    []models.SubjectItem   `json:"subjects"`
-	Projects    []models.ProjectItem   `json:"projects"`
-	Checklist   []models.ChecklistItem `json:"checklist"`
-	WeeklyExams []string               `json:"weekly_exams"`
+	Subjects    []domain.SubjectItem   `json:"subjects"`
+	Projects    []domain.ProjectItem   `json:"projects"`
+	Checklist   []domain.ChecklistItem `json:"checklist"`
 	ConfirmOn   bool                   `json:"confirm_on"`
 	WeekStart   string                 `json:"week_start"`
 	WeekSpan    int                    `json:"week_span"`

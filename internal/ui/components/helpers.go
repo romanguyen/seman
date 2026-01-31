@@ -33,10 +33,3 @@ func YesNo(val bool) string {
 	}
 	return "No"
 }
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
