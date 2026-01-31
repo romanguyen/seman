@@ -1,7 +1,6 @@
 package app
 
 import (
-	"sort"
 	"strings"
 
 	"student-exams-manager/internal/domain"
@@ -66,33 +65,6 @@ func (m *Model) normalizeExamCursor() {
 	}
 }
 
-func (m *Model) sortExamsByPriority() {
-	if len(m.subjects) == 0 {
-		return
-	}
-	var selectedKey string
-	selectedSubject := m.selectedSubj
-	if selectedSubject >= 0 && selectedSubject < len(m.subjects) {
-		selectedKey = examKey(m.subjects[selectedSubject].Exams, m.examCursor)
-	}
-	for i := range m.subjects {
-		exams := m.subjects[i].Exams
-		if len(exams) < 2 {
-			continue
-		}
-		sort.SliceStable(exams, func(a, b int) bool {
-			return priorityRank(exams[a].Priority) < priorityRank(exams[b].Priority)
-		})
-		m.subjects[i].Exams = exams
-	}
-	if selectedKey != "" && selectedSubject >= 0 && selectedSubject < len(m.subjects) {
-		if idx := findExamIndex(m.subjects[selectedSubject].Exams, selectedKey); idx >= 0 {
-			m.examCursor = idx
-		}
-	}
-	m.refreshExamFilter()
-}
-
 func examKey(items []domain.ExamItem, idx int) string {
 	if idx < 0 || idx >= len(items) {
 		return ""
@@ -108,19 +80,6 @@ func findExamIndex(items []domain.ExamItem, key string) int {
 		}
 	}
 	return -1
-}
-
-func priorityRank(priority string) int {
-	switch strings.ToUpper(strings.TrimSpace(priority)) {
-	case domain.PriorityHigh:
-		return 0
-	case domain.PriorityMed:
-		return 1
-	case domain.PriorityLow:
-		return 2
-	default:
-		return 3
-	}
 }
 
 func (m *Model) moveSemesterCursor(delta int) {

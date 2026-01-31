@@ -19,9 +19,6 @@ func (m *Model) applyData(data storage.SemesterData) {
 	m.lofi.status = lofiStatusStopped
 	m.lofi.err = ""
 	m.ensureTodoDueDates()
-	m.sortExamsByPriority()
-	m.sortProjectsByStatus()
-	m.sortChecklistByDone()
 	m.refreshExamFilter()
 	m.refreshChecklistView()
 

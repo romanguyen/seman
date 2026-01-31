@@ -22,40 +22,6 @@ func (m *Model) refreshChecklistView() {
 	m.ensureChecklistVisible(visibleCursor, len(filtered))
 }
 
-func (m *Model) sortChecklistByDone() {
-	if len(m.checklistItems) < 2 {
-		return
-	}
-
-	oldCursor := m.checklistCursor
-	if oldCursor < 0 {
-		oldCursor = -1
-	}
-	indices := make([]int, 0, len(m.checklistItems))
-	for i, item := range m.checklistItems {
-		if !item.Done {
-			indices = append(indices, i)
-		}
-	}
-	for i, item := range m.checklistItems {
-		if item.Done {
-			indices = append(indices, i)
-		}
-	}
-
-	newItems := make([]domain.ChecklistItem, len(m.checklistItems))
-	newCursor := -1
-	for newIdx, oldIdx := range indices {
-		newItems[newIdx] = m.checklistItems[oldIdx]
-		if oldIdx == oldCursor {
-			newCursor = newIdx
-		}
-	}
-
-	m.checklistItems = newItems
-	m.checklistCursor = newCursor
-}
-
 func (m *Model) ensureChecklistVisible(cursor, count int) {
 	if count == 0 || m.checklist.Height <= 0 {
 		return
@@ -97,7 +63,6 @@ func (m *Model) toggleChecklistItem() {
 		return
 	}
 	m.checklistItems[idx].Done = !m.checklistItems[idx].Done
-	m.sortChecklistByDone()
 	m.persist()
 	m.refreshChecklistView()
 }

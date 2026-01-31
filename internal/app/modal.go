@@ -339,7 +339,7 @@ func (m *Model) addExam(subjectCode, examName, date, retakesRaw, priority string
 	})
 	m.selectedSubj = idx
 	m.examCursor = len(m.subjects[idx].Exams) - 1
-	m.sortExamsByPriority()
+	m.refreshExamFilter()
 	m.persist()
 	return nil
 }
@@ -361,7 +361,7 @@ func (m *Model) updateExam(subjectIdx, examIdx int, examName, date, retakesRaw, 
 	exams[examIdx].Priority = strings.ToUpper(priority)
 	m.subjects[subjectIdx].Exams = exams
 	m.examCursor = examIdx
-	m.sortExamsByPriority()
+	m.refreshExamFilter()
 	m.persist()
 	return nil
 }
@@ -382,7 +382,6 @@ func (m *Model) saveProject(idx int, name, subject, deadline, status string) err
 			Status:  status,
 		})
 		m.projectCursor = len(m.projects) - 1
-		m.sortProjectsByStatus()
 		m.persist()
 		return nil
 	}
@@ -394,7 +393,6 @@ func (m *Model) saveProject(idx int, name, subject, deadline, status string) err
 	m.projects[idx].Due = deadline
 	m.projects[idx].Status = status
 	m.projectCursor = idx
-	m.sortProjectsByStatus()
 	m.persist()
 	return nil
 }
@@ -410,7 +408,6 @@ func (m *Model) saveTodo(idx int, task string) error {
 			Due:  m.weekStart.Format("2006-01-02"),
 		})
 		m.checklistCursor = len(m.checklistItems) - 1
-		m.sortChecklistByDone()
 		m.persist()
 		m.refreshChecklistView()
 		return nil
@@ -419,7 +416,6 @@ func (m *Model) saveTodo(idx int, task string) error {
 		return nil
 	}
 	m.checklistItems[idx].Text = task
-	m.sortChecklistByDone()
 	m.persist()
 	m.refreshChecklistView()
 	return nil
