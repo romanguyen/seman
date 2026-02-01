@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -204,11 +205,13 @@ func (m *Model) openAddSubject() {
 }
 
 func (m *Model) openAddExam() {
-	m.openForm(modalAddExam, "Add Exam", examFormSpec)
+	today := domain.FormatDate(time.Now())
+	m.openForm(modalAddExam, "Add Exam", examFormSpec, "", "", today)
 }
 
 func (m *Model) openAddProject() {
-	m.openForm(modalAddProject, "Add Project", projectFormSpec)
+	today := domain.FormatDate(time.Now())
+	m.openForm(modalAddProject, "Add Project", projectFormSpec, "", "", today)
 }
 
 func (m *Model) openAddTodo() {
