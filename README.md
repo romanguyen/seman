@@ -1,74 +1,99 @@
-Seman (Go TUI)
+# Seman
 
 A terminal UI to track subjects/exams, projects, and todos with a weekly view. Includes an optional Lofi player tab.
 
-Requirements
-
+## Requirements
 - Go 1.21+
-- Optional (Lofi tab): mpv and yt-dlp
+- Optional (Lofi tab): `mpv`, `yt-dlp`
 
-Install
+## Install
+Run without installing:
+```bash
+go run ./cmd/seman
+```
 
-- Run without installing:
-  - go run ./cmd/seman
-- Build a local binary:
-  - go build -o seman ./cmd/seman
-- Install to ~/.local/bin:
-  - ./install.sh
-  - Note: add ~/.local/bin to your PATH if needed.
+Build a local binary:
+```bash
+go build -o seman ./cmd/seman
+```
 
-Usage
+Install to `~/.local/bin`:
+```bash
+./install.sh
+```
+If `~/.local/bin` is not in your PATH, add it:
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
 
-- Default:
-  - seman
-- Custom data path:
-  - seman -data /path/to/semester.json
-  - SEMAN_DATA=/path/to/semester.json seman
-  - Flag takes precedence over env var.
+## Usage
+Default:
+```bash
+seman
+```
 
-Data storage
+Custom data path:
+```bash
+seman -data /path/to/semester.json
+SEMAN_DATA=/path/to/semester.json seman
+```
+The `-data` flag takes precedence over `SEMAN_DATA`.
 
-- Default directory: $XDG_DATA_HOME/seman
-- Fallback directory: $HOME/.local/share/seman
-- File name: semester.json
+## Data Storage
+- Default directory: `$XDG_DATA_HOME/seman`
+- Fallback directory: `$HOME/.local/share/seman`
+- File name: `semester.json`
 - The file is created on first save.
 - The app starts with empty data when no file exists.
 
-Key bindings (global)
+## Key Bindings
+### Global
+| Key | Action |
+| --- | ------ |
+| `1-6` | switch tabs |
+| `A` | add (contextual: Exams/Todos/Projects) |
+| `S` | add subject (Exams tab only) |
+| `E` | edit current item |
+| `D` | delete current item |
+| `Q` | quit |
+| `Left/Right` | shift week |
+| `Tab` | toggle focus (Subjects/Exams on Exams tab) |
 
-- [1-6] switch tabs
-- [A] add (contextual: Exams/Todos/Projects)
-- [E] edit current item
-- [D] delete current item
-- [Q] quit
-- [Left]/[Right] shift week
+### Settings Tab
+| Key | Action |
+| --- | ------ |
+| `O` | toggle confirm on delete |
+| `W` | cycle week span |
+| `L` | toggle Lofi tab |
+| `U` | edit Lofi playlist URL |
+| `C` | clear all data |
 
-Settings tab
+### Lofi Tab
+| Key | Action |
+| --- | ------ |
+| `Enter` | play current track |
+| `Space` | play/pause |
+| `N` | next |
+| `B` | previous |
+| `X` | stop |
 
-- [O] toggle confirm on delete
-- [W] cycle week span
-- [L] toggle Lofi tab
-- [U] edit Lofi playlist URL
-- [C] clear all data
+## Date Format
+All dates are **DD/MM/YYYY**.
 
-Lofi tab
+## Troubleshooting (Lofi)
+If playback sticks on "Loading...", update `yt-dlp` and ensure `mpv` uses it:
+```bash
+mpv --no-video --script-opts=ytdl_hook-ytdl_path=yt-dlp <playlist_url>
+```
 
-- [Enter] play current track
-- [Space] play/pause
-- [N] next
-- [B] previous
-- [x] stop
+## Uninstall
+```bash
+./uninstall.sh
+./uninstall.sh --data
+```
 
-Troubleshooting (Lofi)
-
-- If playback sticks on "Loading...", update yt-dlp and ensure mpv uses it.
-- Example: mpv --no-video --script-opts=ytdl_hook-ytdl_path=yt-dlp <playlist_url>
-
-Uninstall
-
-- ./uninstall.sh
-- ./uninstall.sh --data (removes data directory)
-
-Tests
-
-- go test ./...
+## Tests
+```bash
+go test ./...
+```
