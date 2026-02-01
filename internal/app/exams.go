@@ -32,7 +32,7 @@ func (m *Model) filteredExams() []domain.ExamItem {
 	}
 	filtered := make([]domain.ExamItem, 0, len(m.examVisible))
 	for _, idx := range m.examVisible {
-		if idx >= 0 && idx < len(exams) {
+		if inBounds(idx, len(exams)) {
 			filtered = append(filtered, exams[idx])
 		}
 	}
@@ -40,7 +40,7 @@ func (m *Model) filteredExams() []domain.ExamItem {
 }
 
 func (m *Model) examsForSelected() []domain.ExamItem {
-	if m.selectedSubj < 0 || m.selectedSubj >= len(m.subjects) {
+	if !inBounds(m.selectedSubj, len(m.subjects)) {
 		return nil
 	}
 	return m.subjects[m.selectedSubj].Exams
@@ -66,13 +66,7 @@ func (m *Model) moveSemesterCursor(delta int) {
 		if len(m.subjects) == 0 {
 			return
 		}
-		m.selectedSubj += delta
-		if m.selectedSubj < 0 {
-			m.selectedSubj = 0
-		}
-		if m.selectedSubj >= len(m.subjects) {
-			m.selectedSubj = len(m.subjects) - 1
-		}
+		m.selectedSubj = clampIndex(m.selectedSubj+delta, len(m.subjects))
 		m.refreshExamFilter()
 		return
 	}
@@ -85,13 +79,7 @@ func (m *Model) moveSemesterCursor(delta int) {
 	if pos < 0 {
 		pos = 0
 	}
-	pos += delta
-	if pos < 0 {
-		pos = 0
-	}
-	if pos >= len(m.examVisible) {
-		pos = len(m.examVisible) - 1
-	}
+	pos = clampIndex(pos+delta, len(m.examVisible))
 	m.examCursor = m.examVisible[pos]
 }
 

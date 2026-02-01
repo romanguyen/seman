@@ -13,7 +13,7 @@ func (m *Model) refreshChecklistView() {
 	t := style.NewTheme()
 	filtered := make([]domain.ChecklistItem, 0, len(m.todoVisible))
 	for _, idx := range m.todoVisible {
-		if idx >= 0 && idx < len(m.checklistItems) {
+		if inBounds(idx, len(m.checklistItems)) {
 			filtered = append(filtered, m.checklistItems[idx])
 		}
 	}
@@ -43,13 +43,7 @@ func (m *Model) moveChecklistCursor(delta int) {
 	if pos < 0 {
 		pos = 0
 	}
-	pos += delta
-	if pos < 0 {
-		pos = 0
-	}
-	if pos >= len(m.todoVisible) {
-		pos = len(m.todoVisible) - 1
-	}
+	pos = clampIndex(pos+delta, len(m.todoVisible))
 	m.checklistCursor = m.todoVisible[pos]
 	m.refreshChecklistView()
 }
@@ -59,7 +53,7 @@ func (m *Model) toggleChecklistItem() {
 		return
 	}
 	idx := m.checklistCursor
-	if idx < 0 || idx >= len(m.checklistItems) {
+	if !inBounds(idx, len(m.checklistItems)) {
 		return
 	}
 	m.checklistItems[idx].Done = !m.checklistItems[idx].Done
