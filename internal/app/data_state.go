@@ -22,30 +22,10 @@ func (m *Model) applyData(data storage.SemesterData) {
 	m.refreshExamFilter()
 	m.refreshChecklistView()
 
-	if m.selectedSubj >= len(m.subjects) {
-		m.selectedSubj = len(m.subjects) - 1
-	}
-	if m.selectedSubj < 0 {
-		m.selectedSubj = 0
-	}
-	if m.projectCursor >= len(m.projects) {
-		m.projectCursor = len(m.projects) - 1
-	}
-	if m.projectCursor < 0 {
-		m.projectCursor = 0
-	}
-	if m.lofiNow >= len(m.lofiPlaylist) {
-		m.lofiNow = len(m.lofiPlaylist) - 1
-	}
-	if m.lofiNow < 0 && len(m.lofiPlaylist) > 0 {
-		m.lofiNow = 0
-	}
-	if m.lofiCursor >= len(m.lofiPlaylist) {
-		m.lofiCursor = len(m.lofiPlaylist) - 1
-	}
-	if m.lofiCursor < 0 && len(m.lofiPlaylist) > 0 {
-		m.lofiCursor = 0
-	}
+	m.selectedSubj = clampIndex(m.selectedSubj, len(m.subjects))
+	m.projectCursor = clampIndex(m.projectCursor, len(m.projects))
+	m.lofiNow = clampIndex(m.lofiNow, len(m.lofiPlaylist))
+	m.lofiCursor = clampIndex(m.lofiCursor, len(m.lofiPlaylist))
 }
 
 func (m Model) exportData() storage.SemesterData {

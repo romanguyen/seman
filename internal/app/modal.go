@@ -231,7 +231,7 @@ func (m *Model) openEditCurrent() {
 }
 
 func (m *Model) openEditSubject() {
-	if m.selectedSubj < 0 || m.selectedSubj >= len(m.subjects) {
+	if !inBounds(m.selectedSubj, len(m.subjects)) {
 		return
 	}
 	subj := m.subjects[m.selectedSubj]
@@ -241,7 +241,7 @@ func (m *Model) openEditSubject() {
 
 func (m *Model) openEditExam() {
 	exams := m.examsForSelected()
-	if len(exams) == 0 || m.examCursor < 0 || m.examCursor >= len(exams) {
+	if !inBounds(m.examCursor, len(exams)) {
 		return
 	}
 	exam := exams[m.examCursor]
@@ -255,7 +255,7 @@ func (m *Model) openEditExam() {
 }
 
 func (m *Model) openEditProject() {
-	if m.projectCursor < 0 || m.projectCursor >= len(m.projects) {
+	if !inBounds(m.projectCursor, len(m.projects)) {
 		return
 	}
 	project := m.projects[m.projectCursor]
@@ -264,7 +264,7 @@ func (m *Model) openEditProject() {
 }
 
 func (m *Model) openEditTodo() {
-	if m.checklistCursor < 0 || m.checklistCursor >= len(m.checklistItems) {
+	if !inBounds(m.checklistCursor, len(m.checklistItems)) {
 		return
 	}
 	item := m.checklistItems[m.checklistCursor]
@@ -302,7 +302,7 @@ func newFormField(label string, width int, required bool) formField {
 }
 
 func (m *Model) formValue(idx int) string {
-	if idx < 0 || idx >= len(m.formFields) {
+	if !inBounds(idx, len(m.formFields)) {
 		return ""
 	}
 	return strings.TrimSpace(m.formFields[idx].input.Value())
@@ -338,7 +338,7 @@ func (m *Model) saveSubject(idx int, code, name string) error {
 		m.persist()
 		return nil
 	}
-	if idx >= len(m.subjects) {
+	if !inBounds(idx, len(m.subjects)) {
 		return nil
 	}
 	m.subjects[idx].Code = code
@@ -377,11 +377,11 @@ func (m *Model) addExam(subjectCode, examName, date, retakesRaw, priority string
 }
 
 func (m *Model) updateExam(subjectIdx, examIdx int, examName, date, retakesRaw, priority string) error {
-	if subjectIdx < 0 || subjectIdx >= len(m.subjects) {
+	if !inBounds(subjectIdx, len(m.subjects)) {
 		return nil
 	}
 	exams := m.subjects[subjectIdx].Exams
-	if examIdx < 0 || examIdx >= len(exams) {
+	if !inBounds(examIdx, len(exams)) {
 		return nil
 	}
 	if examName == "" || date == "" {
@@ -429,7 +429,7 @@ func (m *Model) saveProject(idx int, name, subject, deadline, status string) err
 		m.persist()
 		return nil
 	}
-	if idx >= len(m.projects) {
+	if !inBounds(idx, len(m.projects)) {
 		return nil
 	}
 	m.projects[idx].Name = name
@@ -463,7 +463,7 @@ func (m *Model) saveTodo(idx int, task, due string) error {
 		m.refreshChecklistView()
 		return nil
 	}
-	if idx >= len(m.checklistItems) {
+	if !inBounds(idx, len(m.checklistItems)) {
 		return nil
 	}
 	m.checklistItems[idx].Text = task
@@ -549,7 +549,7 @@ func (m *Model) queueDelete() {
 		message := fmt.Sprintf("Delete project %s?", m.projects[m.projectCursor].Name)
 		m.confirmOrApply(action, message)
 	case tabTodos:
-		if len(m.checklistItems) == 0 || m.checklistCursor < 0 || m.checklistCursor >= len(m.checklistItems) {
+		if !inBounds(m.checklistCursor, len(m.checklistItems)) {
 			return
 		}
 		action := confirmAction{kind: confirmDeleteTodo, projectIdx: m.checklistCursor}
@@ -580,35 +580,20 @@ func (m *Model) confirmOrApply(action confirmAction, message string) {
 func (m *Model) applyConfirmAction() {
 	switch m.confirmAction.kind {
 	case confirmDeleteSubject:
-		if m.confirmAction.subjectIdx >= 0 && m.confirmAction.subjectIdx < len(m.subjects) {
+		if inBounds(m.confirmAction.subjectIdx, len(m.subjects)) {
 			m.subjects = append(m.subjects[:m.confirmAction.subjectIdx], m.subjects[m.confirmAction.subjectIdx+1:]...)
-			if m.selectedSubj >= len(m.subjects) {
-				m.selectedSubj = len(m.subjects) - 1
-			}
-			if m.selectedSubj < 0 {
-				m.selectedSubj = 0
-			}
+			m.selectedSubj = clampIndex(m.selectedSubj, len(m.subjects))
 		}
 	case confirmDeleteProject:
-		if m.confirmAction.projectIdx >= 0 && m.confirmAction.projectIdx < len(m.projects) {
+		if inBounds(m.confirmAction.projectIdx, len(m.projects)) {
 			m.projects = append(m.projects[:m.confirmAction.projectIdx], m.projects[m.confirmAction.projectIdx+1:]...)
-			if m.projectCursor >= len(m.projects) {
-				m.projectCursor = len(m.projects) - 1
-			}
-			if m.projectCursor < 0 {
-				m.projectCursor = 0
-			}
+			m.projectCursor = clampIndex(m.projectCursor, len(m.projects))
 		}
 	case confirmDeleteTodo:
-		if m.confirmAction.projectIdx >= 0 && m.confirmAction.projectIdx < len(m.checklistItems) {
+		if inBounds(m.confirmAction.projectIdx, len(m.checklistItems)) {
 			idx := m.confirmAction.projectIdx
 			m.checklistItems = append(m.checklistItems[:idx], m.checklistItems[idx+1:]...)
-			if m.checklistCursor >= len(m.checklistItems) {
-				m.checklistCursor = len(m.checklistItems) - 1
-			}
-			if m.checklistCursor < 0 {
-				m.checklistCursor = 0
-			}
+			m.checklistCursor = clampIndex(m.checklistCursor, len(m.checklistItems))
 			m.refreshChecklistView()
 		}
 	case confirmClearAll:
