@@ -5,12 +5,14 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	"seman/internal/domain"
+	"seman/internal/style"
 	"seman/internal/ui/components"
 )
 
 type State struct {
 	ActiveTab     int
 	ConfirmOn     bool
+	ThemeName     style.ThemeName
 	Checklist     viewport.Model
 	Projects      []domain.ProjectItem
 	Subjects      []domain.SubjectItem

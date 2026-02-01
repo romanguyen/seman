@@ -20,7 +20,7 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
-	t := style.NewTheme()
+	t := style.NewThemeWithName(m.themeName)
 	header := components.RenderHeader(m.width, t)
 	tabs := components.RenderTabs(m.activeTab, m.width, m.weekLabel, m.tabItems(), t)
 	divider := components.RenderDivider(m.width, t)
@@ -56,6 +56,7 @@ func (m Model) viewState() screens.State {
 	state := screens.State{
 		ActiveTab:     m.activeTab,
 		ConfirmOn:     m.confirmOn,
+		ThemeName:     m.themeName,
 		Checklist:     m.checklist,
 		Projects:      m.projects,
 		Subjects:      m.subjects,

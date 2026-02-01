@@ -11,6 +11,7 @@ type SemesterData struct {
 	WeekSpan    int                    `json:"week_span"`
 	LofiEnabled bool                   `json:"lofi_enabled"`
 	LofiURL     string                 `json:"lofi_url"`
+	ThemeName   string                 `json:"theme_name"`
 }
 
 type Store interface {
