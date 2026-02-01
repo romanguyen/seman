@@ -5,6 +5,7 @@ import (
 
 	"seman/internal/domain"
 	"seman/internal/storage"
+	"seman/internal/style"
 )
 
 func (m *Model) applyData(data storage.SemesterData) {
@@ -18,6 +19,7 @@ func (m *Model) applyData(data storage.SemesterData) {
 	m.lofi.url = strings.TrimSpace(data.LofiURL)
 	m.lofi.status = lofiStatusStopped
 	m.lofi.err = ""
+	m.setThemeFromData(data.ThemeName)
 	m.ensureTodoDueDates()
 	m.refreshExamFilter()
 	m.refreshChecklistView()
@@ -58,7 +60,22 @@ func (m Model) exportData() storage.SemesterData {
 		WeekSpan:    m.weekSpan,
 		LofiEnabled: m.lofi.enabled,
 		LofiURL:     m.lofi.url,
+		ThemeName:   string(m.themeName),
 	}
+}
+
+func (m *Model) setThemeFromData(name string) {
+	switch style.ThemeName(name) {
+	case style.ThemeDracula, style.ThemeNord, style.ThemeSolarize, style.ThemeCyberpnk:
+		m.themeName = style.ThemeName(name)
+	default:
+		m.themeName = style.ThemeMatrix
+	}
+}
+
+func (m *Model) cycleTheme() {
+	m.themeName = style.NextTheme(m.themeName)
+	m.persist()
 }
 
 func (m *Model) persist() {

@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"seman/internal/domain"
 	"seman/internal/storage"
+	"seman/internal/style"
 )
 
 type Model struct {
@@ -29,6 +30,7 @@ type Model struct {
 	projectCursor   int
 	confirmOn       bool
 	weekSpan        int
+	themeName       style.ThemeName
 	lofi            lofiState
 	lofiPlaylist    []domain.LofiTrack
 	lofiCursor      int
@@ -187,6 +189,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeTab == tabSettings {
 				cmd := m.toggleLofiEnabled()
 				return m, cmd
+			}
+		case "t", "T":
+			if m.activeTab == tabSettings {
+				m.cycleTheme()
+				return m, nil
 			}
 		case "u", "U":
 			if m.activeTab == tabSettings || m.activeTab == tabLofi {

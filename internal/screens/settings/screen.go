@@ -11,6 +11,10 @@ import (
 	"seman/internal/ui/layout"
 )
 
+func themeLabel(name style.ThemeName) string {
+	return style.ThemeLabel(name)
+}
+
 func Render(state screens.State, width, height int, t style.Theme) string {
 	gap := 1
 	leftWidth := (width - gap) / 2
@@ -29,6 +33,7 @@ func Render(state screens.State, width, height int, t style.Theme) string {
 
 	displayContentW := layout.PanelContentWidth(leftWidth)
 	displayBody := strings.Join([]string{
+		components.AlignLine(displayContentW, t.Text.Render("Color theme: "+themeLabel(state.ThemeName)), t.Text.Render("[T] Change")),
 		components.AlignLine(displayContentW, t.Text.Render("Weeks visible: "+weekSpanLabel(state.WeekSpan)), t.Text.Render("[W] Change")),
 		components.AlignLine(displayContentW, t.Text.Render(fmt.Sprintf("Confirm deletions: %s", components.YesNo(state.ConfirmOn))), t.Text.Render("[O] Toggle")),
 		components.AlignLine(displayContentW, t.Text.Render(fmt.Sprintf("Lofi tab: %s", components.YesNo(state.LofiEnabled))), t.Text.Render("[L] Toggle")),
