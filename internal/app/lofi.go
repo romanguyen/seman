@@ -20,6 +20,14 @@ const (
 	lofiStatusPlaying = "Playing"
 	lofiStatusPaused  = "Paused"
 	lofiStatusLoading = "Loading..."
+
+	// Timing constants for lofi player
+	lofiMaxPollAttempts   = 30
+	lofiDeferIndexDelay   = 200 * time.Millisecond
+	lofiPollInterval      = 400 * time.Millisecond
+	lofiPlaybackThreshold = 0.05
+	lofiSocketRetries     = 6
+	lofiSocketRetryDelay  = 50 * time.Millisecond
 )
 
 type lofiState struct {
@@ -133,7 +141,7 @@ func (m *Model) applyLofiPlayback(msg lofiPlaybackMsg) tea.Cmd {
 	if m.lofi.status != lofiStatusLoading {
 		return nil
 	}
-	if msg.attempts >= 30 {
+	if msg.attempts >= lofiMaxPollAttempts {
 		return nil
 	}
 	return m.pollLofiPlayback(msg.attempts + 1)
@@ -166,13 +174,13 @@ func deferLofiIndex(index int) tea.Cmd {
 	if index < 0 {
 		return nil
 	}
-	return tea.Tick(200*time.Millisecond, func(time.Time) tea.Msg {
+	return tea.Tick(lofiDeferIndexDelay, func(time.Time) tea.Msg {
 		return lofiIndexMsg{index: index}
 	})
 }
 
 func (m *Model) pollLofiPlayback(attempts int) tea.Cmd {
-	return tea.Tick(400*time.Millisecond, func(time.Time) tea.Msg {
+	return tea.Tick(lofiPollInterval, func(time.Time) tea.Msg {
 		playing, err := m.isLofiPlaying()
 		return lofiPlaybackMsg{playing: playing, attempts: attempts, err: err}
 	})
@@ -439,7 +447,7 @@ func (m *Model) isLofiPlaying() (bool, error) {
 	if !ok {
 		return false, nil
 	}
-	return val > 0.05, nil
+	return val > lofiPlaybackThreshold, nil
 }
 
 func (m *Model) sendLofiRequest(args ...any) (mpvResponse, error) {
@@ -478,13 +486,13 @@ func (m *Model) dialLofiSocket() (net.Conn, error) {
 		return nil, fmt.Errorf("player not running")
 	}
 	var lastErr error
-	for i := 0; i < 6; i++ {
+	for i := 0; i < lofiSocketRetries; i++ {
 		conn, err := net.Dial("unix", m.lofi.socketPath)
 		if err == nil {
 			return conn, nil
 		}
 		lastErr = err
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(lofiSocketRetryDelay)
 	}
 	return nil, lastErr
 }
