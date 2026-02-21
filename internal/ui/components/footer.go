@@ -7,8 +7,35 @@ import (
 	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
 )
 
-// tabSubjects is the tab ID for the Subjects tab, kept in sync with app/model.go.
-const tabSubjectsID = 6
+// Tab ID constants kept in sync with app/model.go.
+const (
+	footerTabDashboard = 0
+	footerTabExams     = 1
+	footerTabTodos     = 2
+	footerTabProjects  = 3
+	footerTabSettings  = 4
+	footerTabLofi      = 5
+	footerTabSubjects  = 6
+)
+
+func tabHint(activeTab int) string {
+	switch activeTab {
+	case footerTabSubjects:
+		return "[A] Add subject  [E] Edit  [D] Delete  [Q] Quit"
+	case footerTabExams:
+		return "[A] Add exam  [E] Edit  [D] Delete  [Tab] Switch focus  [Q] Quit"
+	case footerTabTodos:
+		return "[N] Add todo  [E] Edit  [D] Delete  [Space] Toggle done  [Q] Quit"
+	case footerTabProjects:
+		return "[P] Add project  [E] Edit  [D] Delete  [Q] Quit"
+	case footerTabSettings:
+		return "[O] Toggle confirm  [W] Week span  [L] Lofi  [U] Lofi URL  [Q] Quit"
+	case footerTabLofi:
+		return "[Enter] Play  [Space] Pause  [N] Next  [B] Prev  [X] Stop  [Q] Quit"
+	default: // Dashboard and anything else
+		return "[S] Add subject  [A] Add exam  [P] Add project  [Q] Quit"
+	}
+}
 
 func RenderFooter(width, tabCount, activeTab int, t style.Theme) string {
 	contentWidth := width - barBorderX - barPaddingX*2
@@ -16,13 +43,7 @@ func RenderFooter(width, tabCount, activeTab int, t style.Theme) string {
 		contentWidth = 1
 	}
 
-	var leftStr string
-	if activeTab == tabSubjectsID {
-		leftStr = "[A] Add subject  [E] Edit  [D] Delete  [Q] Quit"
-	} else {
-		leftStr = "[A] Add exam  [S] Add subject  [P] Add project  [Q] Quit"
-	}
-	left := t.FooterHint.Render(leftStr)
+	left := t.FooterHint.Render(tabHint(activeTab))
 	right := t.FooterHint.Render(fmt.Sprintf("[1-%d] Switch tabs", tabCount))
 	content := AlignLine(contentWidth, left, right)
 

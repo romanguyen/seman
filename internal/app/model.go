@@ -41,12 +41,14 @@ type Model struct {
 	lofiListHeight  int
 	lofiNow         int
 	lofiReload      bool
-	modal           modalKind
-	formFields      []formField
-	formFocus       int
-	modalTitle      string
-	modalHint       string
-	modalError      string
+	modal            modalKind
+	formFields       []formField
+	formFocus        int
+	modalTitle       string
+	modalHint        string
+	modalError       string
+	dropdownMatches  []string
+	dropdownCursor   int
 	confirmAction   confirmAction
 	editSubjectIdx  int
 	editExamIdx     int
@@ -719,10 +721,17 @@ func (m Model) viewState() screens.State {
 		})
 	}
 
+	dropdownFieldIdx := -1
+	if m.isSubjectField() && len(m.dropdownMatches) > 0 {
+		dropdownFieldIdx = m.formFocus
+	}
 	modalState := components.ModalState{
-		Title:  m.modalTitle,
-		Hint:   m.modalHint,
-		Fields: fields,
+		Title:            m.modalTitle,
+		Hint:             m.modalHint,
+		Fields:           fields,
+		DropdownItems:    m.dropdownMatches,
+		DropdownCursor:   m.dropdownCursor,
+		DropdownFieldIdx: dropdownFieldIdx,
 	}
 	switch m.modal {
 	case modalConfirm:

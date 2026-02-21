@@ -47,6 +47,54 @@ type formField struct {
 	required bool
 }
 
+// isSubjectField reports whether the currently focused form field is a Subject field.
+func (m *Model) isSubjectField() bool {
+	if m.formFocus < 0 || m.formFocus >= len(m.formFields) {
+		return false
+	}
+	return strings.EqualFold(m.formFields[m.formFocus].label, "Subject")
+}
+
+// refreshDropdown recomputes dropdown matches for the active Subject field.
+// Matches are sorted: starts-with first, then contains; both code and name are searched.
+func (m *Model) refreshDropdown() {
+	if !m.isSubjectField() {
+		m.dropdownMatches = nil
+		m.dropdownCursor = -1
+		return
+	}
+	query := strings.ToLower(strings.TrimSpace(m.formFields[m.formFocus].input.Value()))
+	var starts, contains []string
+	for _, s := range m.subjects {
+		code := strings.ToLower(s.Code)
+		name := strings.ToLower(s.Name)
+		if query == "" {
+			starts = append(starts, s.Code)
+		} else if strings.HasPrefix(code, query) || strings.HasPrefix(name, query) {
+			starts = append(starts, s.Code)
+		} else if strings.Contains(code, query) || strings.Contains(name, query) {
+			contains = append(contains, s.Code)
+		}
+	}
+	m.dropdownMatches = append(starts, contains...)
+	if len(m.dropdownMatches) == 0 {
+		m.dropdownCursor = -1
+	} else if m.dropdownCursor >= len(m.dropdownMatches) {
+		m.dropdownCursor = len(m.dropdownMatches) - 1
+	} else if m.dropdownCursor < 0 {
+		m.dropdownCursor = 0
+	}
+}
+
+// applyDropdownSelection fills the active field with the currently highlighted match.
+func (m *Model) applyDropdownSelection() {
+	if m.dropdownCursor < 0 || m.dropdownCursor >= len(m.dropdownMatches) {
+		return
+	}
+	m.formFields[m.formFocus].input.SetValue(m.dropdownMatches[m.dropdownCursor])
+	m.formFields[m.formFocus].input.CursorEnd()
+}
+
 func (m Model) updateModal(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -71,19 +119,48 @@ func (m Model) updateModal(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, cmd
 			}
 			m.setFormFocus(m.formFocus + 1)
+			m.refreshDropdown()
 			return m, nil
+		case "up":
+			if m.isSubjectField() && len(m.dropdownMatches) > 0 {
+				if m.dropdownCursor > 0 {
+					m.dropdownCursor--
+				}
+				m.applyDropdownSelection()
+				return m, nil
+			}
+		case "down":
+			if m.isSubjectField() && len(m.dropdownMatches) > 0 {
+				if m.dropdownCursor < len(m.dropdownMatches)-1 {
+					m.dropdownCursor++
+				}
+				m.applyDropdownSelection()
+				return m, nil
+			}
 		case "tab":
 			if m.modal != modalConfirm {
+				if m.isSubjectField() && len(m.dropdownMatches) > 0 {
+					m.dropdownCursor = (m.dropdownCursor + 1) % len(m.dropdownMatches)
+					m.applyDropdownSelection()
+					return m, nil
+				}
 				m.setFormFocus((m.formFocus + 1) % len(m.formFields))
+				m.refreshDropdown()
 				return m, nil
 			}
 		case "shift+tab":
 			if m.modal != modalConfirm {
+				if m.isSubjectField() && len(m.dropdownMatches) > 0 {
+					m.dropdownCursor = (m.dropdownCursor - 1 + len(m.dropdownMatches)) % len(m.dropdownMatches)
+					m.applyDropdownSelection()
+					return m, nil
+				}
 				next := m.formFocus - 1
 				if next < 0 {
 					next = len(m.formFields) - 1
 				}
 				m.setFormFocus(next)
+				m.refreshDropdown()
 				return m, nil
 			}
 		case "y", "Y":
@@ -108,6 +185,7 @@ func (m Model) updateModal(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	field.input, cmd = field.input.Update(msg)
 	m.formFields[m.formFocus] = field
+	m.refreshDropdown()
 	return m, cmd
 }
 
@@ -122,6 +200,8 @@ func (m *Model) closeModal() {
 	m.editExamIdx = -1
 	m.editProjectIdx = -1
 	m.editTodoIdx = -1
+	m.dropdownMatches = nil
+	m.dropdownCursor = -1
 }
 
 func (m *Model) setFormFocus(idx int) {
@@ -280,9 +360,22 @@ func (m *Model) openFormModal(kind modalKind, title string, fields []formField) 
 	m.modal = kind
 	m.formFields = fields
 	m.modalTitle = title
-	m.modalHint = "Tab to switch, Enter to save, Esc to cancel"
+	hasSubjectField := false
+	for _, f := range fields {
+		if strings.EqualFold(f.label, "Subject") {
+			hasSubjectField = true
+			break
+		}
+	}
+	if hasSubjectField {
+		m.modalHint = "Tab/↑↓ select subject · Enter to advance · Esc to cancel"
+	} else {
+		m.modalHint = "Tab to switch · Enter to save · Esc to cancel"
+	}
 	m.modalError = ""
+	m.dropdownCursor = 0
 	m.setFormFocus(0)
+	m.refreshDropdown()
 }
 
 func newFormField(label string, width int, required bool) formField {

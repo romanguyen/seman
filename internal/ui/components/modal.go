@@ -22,16 +22,56 @@ type ModalField struct {
 }
 
 type ModalState struct {
-	Mode    ModalMode
-	Title   string
-	Hint    string
-	Message string
-	Error   string
-	Fields  []ModalField
+	Mode             ModalMode
+	Title            string
+	Hint             string
+	Message          string
+	Error            string
+	Fields           []ModalField
+	DropdownItems    []string
+	DropdownCursor   int
+	DropdownFieldIdx int // index of the field that owns the dropdown; -1 if none
 }
+
+const dropdownPanelWidth = 18
+const dropdownMaxVisible = 8
 
 func RenderModalArea(state ModalState, width, height int, t style.Theme) string {
 	modal := RenderModal(state, width, t)
+
+	if state.DropdownFieldIdx >= 0 && len(state.DropdownItems) > 0 {
+		dropdown := renderDropdownPanel(state, t)
+		combined := lipgloss.JoinHorizontal(lipgloss.Top, modal, " ", dropdown)
+
+		// Left-pad so the modal itself (not the combined block) is centered.
+		modalW := lipgloss.Width(modal)
+		leftPad := (width - modalW) / 2
+		if leftPad < 0 {
+			leftPad = 0
+		}
+		pad := strings.Repeat(" ", leftPad)
+
+		// Vertically center the combined block.
+		combinedH := lipgloss.Height(combined)
+		topLines := (height - combinedH) / 2
+		if topLines < 0 {
+			topLines = 0
+		}
+
+		var out strings.Builder
+		for i := 0; i < topLines; i++ {
+			out.WriteString("\n")
+		}
+		lines := strings.Split(combined, "\n")
+		for i, line := range lines {
+			if i > 0 {
+				out.WriteString("\n")
+			}
+			out.WriteString(pad + line)
+		}
+		return out.String()
+	}
+
 	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, modal)
 }
 
@@ -75,5 +115,45 @@ func RenderModal(state ModalState, width int, t style.Theme) string {
 		b.WriteString(t.ModalHint.Render(state.Hint))
 	}
 
+	return box.Render(b.String())
+}
+
+func renderDropdownPanel(state ModalState, t style.Theme) string {
+	items := state.DropdownItems
+	cursor := state.DropdownCursor
+
+	// Sliding window centred on the cursor.
+	start := cursor - dropdownMaxVisible/2
+	if start < 0 {
+		start = 0
+	}
+	end := start + dropdownMaxVisible
+	if end > len(items) {
+		end = len(items)
+		start = end - dropdownMaxVisible
+		if start < 0 {
+			start = 0
+		}
+	}
+
+	var b strings.Builder
+	b.WriteString(t.Dim.Render("Subjects"))
+	for i := start; i < end; i++ {
+		b.WriteString("\n")
+		if i == cursor {
+			b.WriteString(t.SubjectActive.Render("> " + items[i]))
+		} else {
+			b.WriteString(t.Dim.Render("  " + items[i]))
+		}
+	}
+	if len(items) > dropdownMaxVisible {
+		b.WriteString("\n")
+		remaining := len(items) - end
+		if remaining > 0 {
+			b.WriteString(t.Dim.Render(fmt.Sprintf("  +%d more", remaining)))
+		}
+	}
+
+	box := t.ModalBorder.Copy().Padding(1, 2).Width(dropdownPanelWidth)
 	return box.Render(b.String())
 }
