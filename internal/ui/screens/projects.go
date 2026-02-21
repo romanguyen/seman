@@ -1,8 +1,8 @@
 package screens
 
 import (
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/components"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/components"
 )
 
 func RenderProjectsTab(state State, width, height int, t style.Theme) string {

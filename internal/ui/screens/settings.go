@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/components"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/components"
 )
 
 func RenderSettingsTab(width, height int, confirmOn bool, weekSpan int, lofiEnabled bool, lofiURL string, t style.Theme) string {

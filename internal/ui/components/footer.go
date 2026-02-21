@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
 )
 
 func RenderFooter(width, tabCount int, t style.Theme) string {

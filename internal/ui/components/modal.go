@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
 )
 
 type ModalMode int

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"student-exams-manager/internal/style"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
 )
 
 func RenderWeekHeader(label string, width int, t style.Theme) string {

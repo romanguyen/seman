@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"student-exams-manager/internal/models"
-	"student-exams-manager/internal/style"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
 )
 
 func RenderSubjects(items []models.SubjectItem, selected int, t style.Theme) string {

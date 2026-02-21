@@ -5,8 +5,8 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/app"
-	"student-exams-manager/internal/storage"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/app"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/storage"
 )
 
 func main() {

@@ -7,11 +7,11 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/models"
-	"student-exams-manager/internal/storage"
-	"student-exams-manager/internal/style"
-	"student-exams-manager/internal/ui/components"
-	"student-exams-manager/internal/ui/screens"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/storage"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/components"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/screens"
 )
 
 type Model struct {

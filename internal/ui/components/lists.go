@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"student-exams-manager/internal/models"
-	"student-exams-manager/internal/style"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
 )
 
 type upcomingExam struct {

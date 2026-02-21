@@ -3,7 +3,7 @@ package components
 import (
 	"strings"
 
-	"student-exams-manager/internal/style"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
 )
 
 func RenderDivider(width int, t style.Theme) string {

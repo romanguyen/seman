@@ -1,4 +1,4 @@
-module student-exams-manager
+module github.com/romanguyen/KEK-keep-everything-kool
 
 go 1.21
 

@@ -1,8 +1,8 @@
 package app
 
 import (
-	"student-exams-manager/internal/models"
-	"student-exams-manager/internal/storage"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/storage"
 )
 
 func DefaultData() storage.SemesterData {

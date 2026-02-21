@@ -3,8 +3,8 @@ package screens
 import (
 	"time"
 
-	"student-exams-manager/internal/models"
-	"student-exams-manager/internal/ui/components"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/components"
 )
 
 type State struct {

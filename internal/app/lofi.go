@@ -12,7 +12,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"student-exams-manager/internal/models"
+	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
 )
 
 const (
