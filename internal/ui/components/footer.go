@@ -21,7 +21,7 @@ const (
 func tabHint(activeTab int) string {
 	switch activeTab {
 	case footerTabSubjects:
-		return "[A] Add subject  [E] Edit  [D] Delete  [Q] Quit"
+		return "[S] Add subject  [E] Edit  [D] Delete  [Q] Quit"
 	case footerTabExams:
 		return "[A] Add exam  [E] Edit  [D] Delete  [Tab] Switch focus  [Q] Quit"
 	case footerTabTodos:

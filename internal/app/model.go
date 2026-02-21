@@ -143,11 +143,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.shiftWeek(1)
 			return m, nil
 		case "a", "A":
-			if m.activeTab == tabSubjects {
-				m.openAddSubject()
-			} else {
-				m.openAddExam()
-			}
+			m.openAddExam()
 			return m, nil
 		case "s", "S":
 			m.openAddSubject()
