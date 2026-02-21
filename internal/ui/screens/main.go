@@ -8,18 +8,20 @@ import (
 
 func RenderMain(state State, width, height int, t style.Theme) string {
 	switch state.ActiveTab {
-	case 0:
+	case 0: // tabDashboard
 		return RenderDashboard(state, width, height, t)
-	case 1:
+	case 1: // tabExams
 		return RenderSemester(state, width, height, t)
-	case 2:
+	case 2: // tabTodos
 		return RenderWeeklyFocus(state, width, height, t)
-	case 3:
+	case 3: // tabProjects
 		return RenderProjectsTab(state, width, height, t)
-	case 4:
+	case 4: // tabSettings
 		return RenderSettingsTab(width, height, state.ConfirmOn, state.WeekSpan, state.LofiEnabled, state.LofiURL, t)
-	case 5:
+	case 5: // tabLofi
 		return RenderLofi(state, width, height, t)
+	case 6: // tabSubjects
+		return RenderSubjectsTab(state, width, height, t)
 	default:
 		return RenderPlaceholder(width, height, t)
 	}

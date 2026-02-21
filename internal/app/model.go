@@ -69,6 +69,7 @@ const (
 	tabProjects
 	tabSettings
 	tabLofi
+	tabSubjects
 )
 
 func NewModel(store storage.Store, data storage.SemesterData, hasData bool) Model {
@@ -140,7 +141,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.shiftWeek(1)
 			return m, nil
 		case "a", "A":
-			m.openAddExam()
+			if m.activeTab == tabSubjects {
+				m.openAddSubject()
+			} else {
+				m.openAddExam()
+			}
 			return m, nil
 		case "s", "S":
 			m.openAddSubject()
@@ -232,6 +237,28 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
+		if m.activeTab == tabSubjects {
+			switch key {
+			case "j", "down":
+				if m.selectedSubj < len(m.subjects)-1 {
+					m.selectedSubj++
+				}
+				return m, nil
+			case "k", "up":
+				if m.selectedSubj > 0 {
+					m.selectedSubj--
+				}
+				return m, nil
+			case "enter":
+				if len(m.subjects) == 0 {
+					m.openAddSubject()
+				} else {
+					m.openEditSubject()
+				}
+				return m, nil
+			}
+		}
+
 		if m.activeTab == tabExams {
 			switch key {
 			case "tab":
@@ -306,7 +333,7 @@ func (m Model) View() string {
 	if state.Modal.Mode != components.ModalHidden {
 		main = screens.RenderModal(state, m.width, mainHeight, t)
 	}
-	footer := components.RenderFooter(m.width, len(m.tabItems()), t)
+	footer := components.RenderFooter(m.width, len(m.tabItems()), m.activeTab, t)
 
 	return strings.Join([]string{header, tabs, divider, main, divider, footer}, "\n")
 }
@@ -881,6 +908,7 @@ func (m *Model) toggleSemesterFocus() {
 func (m Model) tabItems() []components.TabItem {
 	items := []components.TabItem{
 		{ID: tabDashboard, Label: "Dashboard"},
+		{ID: tabSubjects, Label: "Subjects"},
 		{ID: tabExams, Label: "Exams"},
 		{ID: tabTodos, Label: "Todos"},
 		{ID: tabProjects, Label: "Projects"},

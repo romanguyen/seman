@@ -180,6 +180,8 @@ func (m *Model) openAddTodo() {
 
 func (m *Model) openEditCurrent() {
 	switch m.activeTab {
+	case tabSubjects:
+		m.openEditSubject()
 	case tabExams:
 		if m.semesterFocus == focusExams {
 			m.openEditExam()
@@ -479,6 +481,13 @@ func splitCSV(raw string) []string {
 
 func (m *Model) queueDelete() {
 	switch m.activeTab {
+	case tabSubjects:
+		if len(m.subjects) == 0 {
+			return
+		}
+		action := confirmAction{kind: confirmDeleteSubject, subjectIdx: m.selectedSubj}
+		message := fmt.Sprintf("Delete subject %s and its exams?", m.subjects[m.selectedSubj].Code)
+		m.confirmOrApply(action, message)
 	case tabExams:
 		if len(m.subjects) == 0 {
 			return
