@@ -32,8 +32,9 @@ type Model struct {
 	weekStart       time.Time
 	weeklyExams     []string
 	projectCursor   int
-	confirmOn       bool
-	weekSpan        int
+	confirmOn        bool
+	weekSpan         int
+	previousWeekSpan int
 	lofi            lofiState
 	lofiPlaylist    []models.LofiTrack
 	lofiCursor      int
@@ -136,6 +137,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			m.shutdownLofi()
 			return m, tea.Quit
+		case "g", "G":
+			m.toggleGlobalView()
+			return m, nil
 		case "left":
 			m.shiftWeek(-1)
 			return m, nil
@@ -555,6 +559,22 @@ func (m *Model) setWeekSpanFromData(value int) {
 	default:
 		m.weekSpan = 1
 	}
+}
+
+func (m *Model) toggleGlobalView() {
+	if m.weekSpan < 0 {
+		if m.previousWeekSpan <= 0 {
+			m.previousWeekSpan = 1
+		}
+		m.weekSpan = m.previousWeekSpan
+	} else {
+		m.previousWeekSpan = m.weekSpan
+		m.weekSpan = -1
+	}
+	m.updateWeekLabel()
+	m.refreshExamFilter()
+	m.refreshChecklistView()
+	m.persist()
 }
 
 func (m *Model) cycleWeekSpan() {

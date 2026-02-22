@@ -23,17 +23,17 @@ func tabHint(activeTab int) string {
 	case footerTabSubjects:
 		return "[S] Add subject  [E] Edit  [D] Delete  [Q] Quit"
 	case footerTabExams:
-		return "[A] Add exam  [E] Edit  [D] Delete  [Tab] Switch focus  [Q] Quit"
+		return "[A] Add exam  [E] Edit  [D] Delete  [Tab] Switch focus  [G] Global  [Q] Quit"
 	case footerTabTodos:
-		return "[N] Add todo  [E] Edit  [D] Delete  [Space] Toggle done  [Q] Quit"
+		return "[N] Add todo  [E] Edit  [D] Delete  [Space] Toggle  [G] Global  [Q] Quit"
 	case footerTabProjects:
 		return "[P] Add project  [E] Edit  [D] Delete  [Q] Quit"
 	case footerTabSettings:
 		return "[O] Toggle confirm  [W] Week span  [L] Lofi  [U] Lofi URL  [Q] Quit"
 	case footerTabLofi:
 		return "[Enter] Play  [Space] Pause  [N] Next  [B] Prev  [X] Stop  [Q] Quit"
-	default: // Dashboard and anything else
-		return "[S] Add subject  [A] Add exam  [P] Add project  [Q] Quit"
+	default: // Dashboard
+		return "[S] Add subject  [A] Add exam  [P] Add project  [G] Global  [Q] Quit"
 	}
 }
 
