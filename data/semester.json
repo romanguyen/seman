@@ -110,6 +110,61 @@
   ],
   "checklist": [
     {
+      "Text": "sprava Mirimu",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "algo DU1",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "anglina - predstavenie",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "anglina - par commentov",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "anglina - reflection?",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "anglina - 200words",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "anglina - notes during reading",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "polepy na notebook",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "alza",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "tricka socks",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
+      "Text": "algo week 2?",
+      "Done": false,
+      "Due": "2026-02-22"
+    },
+    {
       "Text": "Submit physics lab report",
       "Done": false,
       "Due": "2026-01-12"
@@ -177,7 +232,7 @@
   ],
   "weekly_exams": [],
   "confirm_on": true,
-  "week_start": "2026-01-12",
+  "week_start": "2026-02-16",
   "week_span": 1,
   "lofi_enabled": true,
   "lofi_url": "https://youtube.com/playlist?list=PLOzDu-MXXLlgKMA3S2FXY_XVyDrukc0si\u0026si=iuGuvTcNxpJL7Auh"

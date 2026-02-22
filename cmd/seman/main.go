@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/romanguyen/KEK-keep-everything-kool/internal/app"
@@ -10,7 +11,17 @@ import (
 )
 
 func main() {
-	store := storage.NewJSONStore("data/semester.json")
+	dataDir, err := dataDirectory()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error locating data directory: %v\n", err)
+		os.Exit(1)
+	}
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating data directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	store := storage.NewJSONStore(filepath.Join(dataDir, "semester.json"))
 	data, found, err := store.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading data: %v\n", err)
@@ -21,4 +32,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+// dataDirectory returns ~/.local/share/seman on Linux/macOS-ish systems.
+func dataDirectory() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".local", "share", "seman"), nil
 }
