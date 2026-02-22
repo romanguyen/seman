@@ -4,8 +4,14 @@ Terminal-based student planner. Manage exams, todos, projects and subjects from 
 
 ## Install
 
+--- 
+temporary
+--- 
+
+
 ```bash
-go install github.com/romanguyen/KEK-keep-everything-kool/cmd/seman@latest
+go install github.com/romanguyen/KEK-keep-everything-kool/cmd/seman@omar_Dev_Version_2.0_BETA
+
 ```
 
 Or build from source:
