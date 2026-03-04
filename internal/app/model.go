@@ -24,11 +24,11 @@ type Model struct {
 	todoVisible     []int
 	projects        []models.ProjectItem
 	subjects        []models.SubjectItem
-	selectedSubj    int
-	examCursor      int
-	examVisible     []int
-	semesterFocus   semesterFocus
-	weekLabel       string
+	selectedSubj       int
+	examCursor         int
+	examSubjectFilter  string
+	flatExams          []models.FlatExam
+	weekLabel          string
 	weekStart       time.Time
 	weeklyExams     []string
 	projectCursor   int
@@ -58,13 +58,6 @@ type Model struct {
 	store           storage.Store
 }
 
-type semesterFocus int
-
-const (
-	focusSubjects semesterFocus = iota
-	focusExams
-)
-
 const (
 	tabDashboard = iota
 	tabExams
@@ -85,7 +78,6 @@ func NewModel(store storage.Store, data storage.SemesterData, hasData bool) Mode
 		checklist:      vp,
 		selectedSubj:   0,
 		examCursor:     0,
-		semesterFocus:  focusSubjects,
 		projectCursor:  0,
 		editSubjectIdx: -1,
 		editExamIdx:    -1,
@@ -147,7 +139,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.shiftWeek(1)
 			return m, nil
 		case "a", "A":
-			m.openAddExam()
+			m.openAddExamWithFilter()
 			return m, nil
 		case "s", "S":
 			m.openAddSubject()
@@ -263,14 +255,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.activeTab == tabExams {
 			switch key {
-			case "tab":
-				m.toggleSemesterFocus()
+			case "f", "F":
+				if m.examSubjectFilter != "" {
+					m.examSubjectFilter = ""
+					m.refreshFlatExams()
+				} else {
+					m.openExamFilter()
+				}
 				return m, nil
 			case "j", "down":
-				m.moveSemesterCursor(1)
+				m.moveExamCursor(1)
 				return m, nil
 			case "k", "up":
-				m.moveSemesterCursor(-1)
+				m.moveExamCursor(-1)
 				return m, nil
 			}
 		}
@@ -380,7 +377,7 @@ func (m *Model) applyData(data storage.SemesterData) {
 	m.sortExamsByPriority()
 	m.sortProjectsByStatus()
 	m.sortChecklistByDone()
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 	m.refreshChecklistView()
 
 	if m.selectedSubj >= len(m.subjects) {
@@ -395,7 +392,7 @@ func (m *Model) applyData(data storage.SemesterData) {
 	if m.projectCursor < 0 {
 		m.projectCursor = 0
 	}
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 	if m.lofiNow >= len(m.lofiPlaylist) {
 		m.lofiNow = len(m.lofiPlaylist) - 1
 	}
@@ -541,7 +538,7 @@ func (m *Model) setWeekStartFromData(value string) {
 func (m *Model) shiftWeek(delta int) {
 	m.weekStart = m.weekStart.AddDate(0, 0, delta*7)
 	m.updateWeekLabel()
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 	m.refreshChecklistView()
 	m.persist()
 }
@@ -572,7 +569,7 @@ func (m *Model) toggleGlobalView() {
 		m.weekSpan = -1
 	}
 	m.updateWeekLabel()
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 	m.refreshChecklistView()
 	m.persist()
 }
@@ -591,7 +588,7 @@ func (m *Model) cycleWeekSpan() {
 		m.weekSpan = 1
 	}
 	m.updateWeekLabel()
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 	m.refreshChecklistView()
 	m.persist()
 }
@@ -633,27 +630,48 @@ func (m *Model) refreshTodoFilter() {
 	}
 }
 
-func (m *Model) refreshExamFilter() {
-	exams := m.examsForSelected()
+func (m *Model) refreshFlatExams() {
 	start, end, all := m.weekRange()
-	visible := make([]int, 0, len(exams))
-	if all {
-		for i := range exams {
-			visible = append(visible, i)
+	var list []models.FlatExam
+	for si, subject := range m.subjects {
+		if m.examSubjectFilter != "" && !strings.EqualFold(subject.Code, m.examSubjectFilter) {
+			continue
 		}
-	} else {
-		for i, exam := range exams {
-			date, ok := parseExamDate(exam.Date)
-			if !ok {
-				continue
+		for ei, exam := range subject.Exams {
+			if !all {
+				date, ok := parseExamDate(exam.Date)
+				if !ok {
+					continue
+				}
+				if date.Before(start) || !date.Before(end) {
+					continue
+				}
 			}
-			if !date.Before(start) && date.Before(end) {
-				visible = append(visible, i)
-			}
+			list = append(list, models.FlatExam{
+				SubjectCode: subject.Code,
+				SubjectIdx:  si,
+				ExamIdx:     ei,
+				Exam:        exam,
+			})
 		}
 	}
-	m.examVisible = visible
-	m.normalizeExamCursor()
+	sort.Slice(list, func(i, j int) bool {
+		di, oki := parseExamDate(list[i].Exam.Date)
+		dj, okj := parseExamDate(list[j].Exam.Date)
+		if !oki {
+			return false
+		}
+		if !okj {
+			return true
+		}
+		return di.Before(dj)
+	})
+	m.flatExams = list
+	if len(m.flatExams) == 0 {
+		m.examCursor = -1
+	} else if m.examCursor < 0 || m.examCursor >= len(m.flatExams) {
+		m.examCursor = 0
+	}
 }
 
 func (m *Model) visibleIndex(items []int, value int) int {
@@ -663,6 +681,19 @@ func (m *Model) visibleIndex(items []int, value int) int {
 		}
 	}
 	return -1
+}
+
+func (m *Model) moveExamCursor(delta int) {
+	if len(m.flatExams) == 0 {
+		return
+	}
+	m.examCursor += delta
+	if m.examCursor < 0 {
+		m.examCursor = 0
+	}
+	if m.examCursor >= len(m.flatExams) {
+		m.examCursor = len(m.flatExams) - 1
+	}
 }
 
 func (m *Model) ensureTodoDueDates() {
@@ -682,20 +713,6 @@ func (m *Model) ensureTodoDueDates() {
 	}
 }
 
-func (m *Model) filteredExams() []models.ExamItem {
-	exams := m.examsForSelected()
-	if len(m.examVisible) == 0 {
-		return nil
-	}
-	filtered := make([]models.ExamItem, 0, len(m.examVisible))
-	for _, idx := range m.examVisible {
-		if idx >= 0 && idx < len(exams) {
-			filtered = append(filtered, exams[idx])
-		}
-	}
-	return filtered
-}
-
 func (m Model) viewState() screens.State {
 	start, end, all := m.weekRange()
 	state := screens.State{
@@ -705,9 +722,9 @@ func (m Model) viewState() screens.State {
 		Projects:      m.projects,
 		Subjects:      m.subjects,
 		SelectedSubj:  m.selectedSubj,
-		ExamCursor:    m.visibleIndex(m.examVisible, m.examCursor),
-		FilteredExams: m.filteredExams(),
-		FocusExams:    m.semesterFocus == focusExams,
+		ExamCursor:        m.examCursor,
+		FlatExams:         m.flatExams,
+		ExamSubjectFilter: m.examSubjectFilter,
 		WeekLabel:     m.weekLabel,
 		FilterStart:   start,
 		FilterEnd:     end,
@@ -768,21 +785,6 @@ func (m *Model) examsForSelected() []models.ExamItem {
 	return m.subjects[m.selectedSubj].Exams
 }
 
-func (m *Model) normalizeExamCursor() {
-	if len(m.examVisible) == 0 {
-		m.examCursor = -1
-		m.semesterFocus = focusSubjects
-		return
-	}
-	if m.examCursor < 0 {
-		m.examCursor = m.examVisible[0]
-		return
-	}
-	if m.visibleIndex(m.examVisible, m.examCursor) == -1 {
-		m.examCursor = m.examVisible[0]
-	}
-}
-
 func (m *Model) sortProjectsByStatus() {
 	if len(m.projects) < 2 {
 		return
@@ -822,7 +824,7 @@ func (m *Model) sortExamsByPriority() {
 			m.examCursor = idx
 		}
 	}
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 }
 
 func projectKey(items []models.ProjectItem, idx int) string {
@@ -883,51 +885,6 @@ func priorityRank(priority string) int {
 	default:
 		return 3
 	}
-}
-
-func (m *Model) moveSemesterCursor(delta int) {
-	if m.semesterFocus == focusSubjects {
-		if len(m.subjects) == 0 {
-			return
-		}
-		m.selectedSubj += delta
-		if m.selectedSubj < 0 {
-			m.selectedSubj = 0
-		}
-		if m.selectedSubj >= len(m.subjects) {
-			m.selectedSubj = len(m.subjects) - 1
-		}
-		m.refreshExamFilter()
-		return
-	}
-
-	if len(m.examVisible) == 0 {
-		m.semesterFocus = focusSubjects
-		return
-	}
-	pos := m.visibleIndex(m.examVisible, m.examCursor)
-	if pos < 0 {
-		pos = 0
-	}
-	pos += delta
-	if pos < 0 {
-		pos = 0
-	}
-	if pos >= len(m.examVisible) {
-		pos = len(m.examVisible) - 1
-	}
-	m.examCursor = m.examVisible[pos]
-}
-
-func (m *Model) toggleSemesterFocus() {
-	if m.semesterFocus == focusSubjects {
-		if len(m.examVisible) == 0 {
-			return
-		}
-		m.semesterFocus = focusExams
-		return
-	}
-	m.semesterFocus = focusSubjects
 }
 
 func (m Model) tabItems() []components.TabItem {

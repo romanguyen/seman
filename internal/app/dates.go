@@ -42,6 +42,14 @@ func parseExamDate(value string) (time.Time, bool) {
 		"Jan 2, 2006",
 		"2006-01-02 15:04",
 		"2006-01-02",
+		"2.1.2006 15:04",
+		"2.1.2006",
+		"02.01.2006 15:04",
+		"02.01.2006",
+		"2/1/2006 15:04",
+		"2/1/2006",
+		"02/01/2006 15:04",
+		"02/01/2006",
 	}
 	for _, layout := range layouts {
 		if t, err := time.ParseInLocation(layout, value, time.Local); err == nil {

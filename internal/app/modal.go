@@ -23,6 +23,7 @@ const (
 	modalEditProject
 	modalEditTodo
 	modalEditLofiURL
+	modalFilterExam
 	modalConfirm
 )
 
@@ -30,6 +31,7 @@ type confirmKind int
 
 const (
 	confirmDeleteSubject confirmKind = iota
+	confirmDeleteExam
 	confirmDeleteProject
 	confirmDeleteTodo
 	confirmClearAll
@@ -38,6 +40,7 @@ const (
 type confirmAction struct {
 	kind       confirmKind
 	subjectIdx int
+	examIdx    int
 	projectIdx int
 }
 
@@ -228,6 +231,10 @@ func (m *Model) openAddSubject() {
 }
 
 func (m *Model) openAddExam() {
+	m.openAddExamWithFilter()
+}
+
+func (m *Model) openAddExamWithFilter() {
 	inputWidth := m.modalInputWidth()
 	fields := []formField{
 		newFormField("Subject", inputWidth, true),
@@ -236,7 +243,25 @@ func (m *Model) openAddExam() {
 		newFormField("Retakes", inputWidth, false),
 		newFormField("Priority", inputWidth, false),
 	}
+	if m.activeTab == tabExams && m.examSubjectFilter != "" {
+		fields[0].input.SetValue(m.examSubjectFilter)
+	}
+	fields[2].input.Placeholder = "Jan 2, 2006 @ 15:04"
+	fields[3].input.Placeholder = "Jan 5, 2006, Jan 8, 2006"
+	fields[4].input.Placeholder = "HIGH / MED / LOW"
 	m.openFormModal(modalAddExam, "Add Exam", fields)
+}
+
+func (m *Model) openExamFilter() {
+	inputWidth := m.modalInputWidth()
+	fields := []formField{
+		newFormField("Subject", inputWidth, false),
+	}
+	if m.examSubjectFilter != "" {
+		fields[0].input.SetValue(m.examSubjectFilter)
+	}
+	m.openFormModal(modalFilterExam, "Filter by Subject", fields)
+	m.modalHint = "↑↓ select subject · Enter to apply · empty to show all · Esc to cancel"
 }
 
 func (m *Model) openAddProject() {
@@ -263,11 +288,7 @@ func (m *Model) openEditCurrent() {
 	case tabSubjects:
 		m.openEditSubject()
 	case tabExams:
-		if m.semesterFocus == focusExams {
-			m.openEditExam()
-			return
-		}
-		m.openEditSubject()
+		m.openEditExam()
 	case tabTodos:
 		m.openEditTodo()
 	case tabProjects:
@@ -292,11 +313,11 @@ func (m *Model) openEditSubject() {
 }
 
 func (m *Model) openEditExam() {
-	exams := m.examsForSelected()
-	if len(exams) == 0 || m.examCursor < 0 || m.examCursor >= len(exams) {
+	if m.examCursor < 0 || m.examCursor >= len(m.flatExams) {
 		return
 	}
-	exam := exams[m.examCursor]
+	flat := m.flatExams[m.examCursor]
+	exam := flat.Exam
 	inputWidth := m.modalInputWidth()
 	fields := []formField{
 		newFormField("Exam Name", inputWidth, true),
@@ -308,9 +329,9 @@ func (m *Model) openEditExam() {
 	fields[1].input.SetValue(exam.Date)
 	fields[2].input.SetValue(strings.Join(exam.Retakes, ", "))
 	fields[3].input.SetValue(exam.Priority)
-	m.editSubjectIdx = m.selectedSubj
-	m.editExamIdx = m.examCursor
-	m.openFormModal(modalEditExam, "Edit Exam", fields)
+	m.editSubjectIdx = flat.SubjectIdx
+	m.editExamIdx = flat.ExamIdx
+	m.openFormModal(modalEditExam, "Edit Exam ("+flat.SubjectCode+")", fields)
 }
 
 func (m *Model) openEditProject() {
@@ -425,9 +446,14 @@ func (m *Model) submitForm() error {
 			Retakes:  retakes,
 			Priority: strings.ToUpper(priority),
 		})
-		m.selectedSubj = idx
-		m.examCursor = len(m.subjects[idx].Exams) - 1
-		m.sortExamsByPriority()
+		newExamIdx := len(m.subjects[idx].Exams) - 1
+		m.refreshFlatExams()
+		for i, flat := range m.flatExams {
+			if flat.SubjectIdx == idx && flat.ExamIdx == newExamIdx {
+				m.examCursor = i
+				break
+			}
+		}
 		m.persist()
 	case modalAddProject:
 		name := strings.TrimSpace(m.formFields[0].input.Value())
@@ -495,8 +521,15 @@ func (m *Model) submitForm() error {
 		exams[m.editExamIdx].Retakes = splitCSV(retakesRaw)
 		exams[m.editExamIdx].Priority = strings.ToUpper(priority)
 		m.subjects[m.editSubjectIdx].Exams = exams
-		m.examCursor = m.editExamIdx
-		m.sortExamsByPriority()
+		editedSI := m.editSubjectIdx
+		editedEI := m.editExamIdx
+		m.refreshFlatExams()
+		for i, flat := range m.flatExams {
+			if flat.SubjectIdx == editedSI && flat.ExamIdx == editedEI {
+				m.examCursor = i
+				break
+			}
+		}
 		m.persist()
 	case modalEditProject:
 		if m.editProjectIdx < 0 || m.editProjectIdx >= len(m.projects) {
@@ -531,6 +564,17 @@ func (m *Model) submitForm() error {
 		m.sortChecklistByDone()
 		m.persist()
 		m.refreshChecklistView()
+	case modalFilterExam:
+		subject := strings.TrimSpace(m.formFields[0].input.Value())
+		if subject != "" && findSubjectIndex(m.subjects, subject) < 0 {
+			return fmt.Errorf("Subject not found.")
+		}
+		if subject == "" {
+			m.examSubjectFilter = ""
+		} else {
+			m.examSubjectFilter = strings.ToUpper(subject)
+		}
+		m.refreshFlatExams()
 	case modalEditLofiURL:
 		url := strings.TrimSpace(m.formFields[0].input.Value())
 		if url == "" {
@@ -582,11 +626,12 @@ func (m *Model) queueDelete() {
 		message := fmt.Sprintf("Delete subject %s and its exams?", m.subjects[m.selectedSubj].Code)
 		m.confirmOrApply(action, message)
 	case tabExams:
-		if len(m.subjects) == 0 {
+		if len(m.flatExams) == 0 || m.examCursor < 0 || m.examCursor >= len(m.flatExams) {
 			return
 		}
-		action := confirmAction{kind: confirmDeleteSubject, subjectIdx: m.selectedSubj}
-		message := fmt.Sprintf("Delete subject %s and its exams?", m.subjects[m.selectedSubj].Code)
+		flat := m.flatExams[m.examCursor]
+		action := confirmAction{kind: confirmDeleteExam, subjectIdx: flat.SubjectIdx, examIdx: flat.ExamIdx}
+		message := fmt.Sprintf("Delete exam \"%s\" (%s)?", flat.Exam.Name, flat.SubjectCode)
 		m.confirmOrApply(action, message)
 	case tabProjects:
 		if len(m.projects) == 0 {
@@ -626,6 +671,16 @@ func (m *Model) confirmOrApply(action confirmAction, message string) {
 
 func (m *Model) applyConfirmAction() {
 	switch m.confirmAction.kind {
+	case confirmDeleteExam:
+		si := m.confirmAction.subjectIdx
+		ei := m.confirmAction.examIdx
+		if si >= 0 && si < len(m.subjects) {
+			exams := m.subjects[si].Exams
+			if ei >= 0 && ei < len(exams) {
+				m.subjects[si].Exams = append(exams[:ei], exams[ei+1:]...)
+			}
+		}
+		m.refreshFlatExams()
 	case confirmDeleteSubject:
 		if m.confirmAction.subjectIdx >= 0 && m.confirmAction.subjectIdx < len(m.subjects) {
 			m.subjects = append(m.subjects[:m.confirmAction.subjectIdx], m.subjects[m.confirmAction.subjectIdx+1:]...)

@@ -23,7 +23,7 @@ func tabHint(activeTab int) string {
 	case footerTabSubjects:
 		return "[S] Add subject  [E] Edit  [D] Delete  [Q] Quit"
 	case footerTabExams:
-		return "[A] Add exam  [E] Edit  [D] Delete  [Tab] Switch focus  [G] Global  [Q] Quit"
+		return "[A] Add exam  [E] Edit  [D] Del exam  [F] Filter subject  [G] Global  [Q] Quit"
 	case footerTabTodos:
 		return "[N] Add todo  [E] Edit  [D] Delete  [Space] Toggle  [G] Global  [Q] Quit"
 	case footerTabProjects:

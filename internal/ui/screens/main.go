@@ -11,7 +11,7 @@ func RenderMain(state State, width, height int, t style.Theme) string {
 	case 0: // tabDashboard
 		return RenderDashboard(state, width, height, t)
 	case 1: // tabExams
-		return RenderSemester(state, width, height, t)
+		return RenderExams(state, width, height, t)
 	case 2: // tabTodos
 		return RenderWeeklyFocus(state, width, height, t)
 	case 3: // tabProjects

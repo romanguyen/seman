@@ -20,6 +20,13 @@ type ExamItem struct {
 	Priority string
 }
 
+type FlatExam struct {
+	SubjectCode string
+	SubjectIdx  int
+	ExamIdx     int
+	Exam        ExamItem
+}
+
 type SubjectItem struct {
 	Code  string
 	Name  string
