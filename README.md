@@ -4,21 +4,21 @@ Terminal-based student planner. Manage exams, todos, projects and subjects from 
 
 ## Install
 
---- 
-temporary
---- 
+```bash
+go install github.com/romanguyen/seman/cmd/seman@latest
+```
 
+Make sure `$GOPATH/bin` is in your PATH (one-time setup):
 
 ```bash
-go install github.com/romanguyen/KEK-keep-everything-kool/cmd/seman@omar_Dev_Version_2.0_BETA
-
+export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
 Or build from source:
 
 ```bash
-git clone git@github.com:romanguyen/KEK-keep-everything-kool.git
-cd KEK-keep-everything-kool
+git clone git@github.com:romanguyen/seman.git
+cd seman
 go install ./cmd/seman
 ```
 
