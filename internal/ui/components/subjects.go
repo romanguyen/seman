@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/seman/internal/models"
+	"github.com/romanguyen/seman/internal/style"
 )
 
 func RenderSubjects(items []models.SubjectItem, selected int, t style.Theme) string {

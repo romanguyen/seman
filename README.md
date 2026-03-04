@@ -6,15 +6,15 @@ Terminal-based student planner. Manage exams, todos, projects and subjects from 
 
 
 ```bash
-go install github.com/romanguyen/KEK-keep-everything-kool/cmd/seman@release
+go install github.com/romanguyen/seman/cmd/seman@release
 
 ```
 
 Or build from source:
 
 ```bash
-git clone git@github.com:romanguyen/KEK-keep-everything-kool.git
-cd KEK-keep-everything-kool
+git clone git@github.com:romanguyen/seman.git
+cd seman
 go install ./cmd/seman
 ```
 

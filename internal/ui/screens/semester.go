@@ -2,8 +2,8 @@ package screens
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/components"
+	"github.com/romanguyen/seman/internal/style"
+	"github.com/romanguyen/seman/internal/ui/components"
 )
 
 func RenderSemester(state State, width, height int, t style.Theme) string {

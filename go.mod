@@ -1,4 +1,4 @@
-module github.com/romanguyen/KEK-keep-everything-kool
+module github.com/romanguyen/seman
 
 go 1.21
 
