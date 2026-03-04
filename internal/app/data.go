@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/storage"
+	"github.com/romanguyen/seman/internal/models"
+	"github.com/romanguyen/seman/internal/storage"
 )
 
 func DefaultData() storage.SemesterData {

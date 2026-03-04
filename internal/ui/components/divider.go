@@ -3,7 +3,7 @@ package components
 import (
 	"strings"
 
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/seman/internal/style"
 )
 
 func RenderDivider(width int, t style.Theme) string {

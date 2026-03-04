@@ -7,11 +7,11 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/storage"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/components"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/screens"
+	"github.com/romanguyen/seman/internal/models"
+	"github.com/romanguyen/seman/internal/storage"
+	"github.com/romanguyen/seman/internal/style"
+	"github.com/romanguyen/seman/internal/ui/components"
+	"github.com/romanguyen/seman/internal/ui/screens"
 )
 
 type Model struct {
