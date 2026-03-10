@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/seman/internal/style"
 )
 
 func RenderHeader(width int, t style.Theme) string {

@@ -1,6 +1,6 @@
 package storage
 
-import "github.com/romanguyen/KEK-keep-everything-kool/internal/models"
+import "github.com/romanguyen/seman/internal/models"
 
 type SemesterData struct {
 	Subjects    []models.SubjectItem   `json:"subjects"`

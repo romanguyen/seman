@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/seman/internal/models"
+	"github.com/romanguyen/seman/internal/style"
 )
 
 type upcomingExam struct {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/models"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/seman/internal/models"
+	"github.com/romanguyen/seman/internal/style"
 )
 
 type modalKind int

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/seman/internal/style"
 )
 
 func RenderPanel(width, height int, title, body string, t style.Theme) string {
