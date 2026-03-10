@@ -17,7 +17,7 @@ func RenderMain(state State, width, height int, t style.Theme) string {
 	case 3: // tabProjects
 		return RenderProjectsTab(state, width, height, t)
 	case 4: // tabSettings
-		return RenderSettingsTab(width, height, state.ConfirmOn, state.WeekSpan, state.LofiEnabled, state.LofiURL, t)
+		return RenderSettingsTab(width, height, state.ConfirmOn, state.WeekSpan, state.LofiEnabled, state.LofiURL, state.ThemeName, t)
 	case 5: // tabLofi
 		return RenderLofi(state, width, height, t)
 	case 6: // tabSubjects

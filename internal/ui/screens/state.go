@@ -10,13 +10,14 @@ import (
 type State struct {
 	ActiveTab          int
 	ConfirmOn          bool
+	ThemeName          string
+	SubjectFilter      string
 	ChecklistView      string
 	Projects           []models.ProjectItem
 	Subjects           []models.SubjectItem
 	SelectedSubj       int
 	ExamCursor         int
 	FlatExams          []models.FlatExam
-	ExamSubjectFilter  string
 	WeekLabel          string
 	FilterStart        time.Time
 	FilterEnd          time.Time

@@ -17,9 +17,13 @@ type upcomingExam struct {
 	Date     time.Time
 }
 
-func RenderUpcomingExams(subjects []models.SubjectItem, limit int, start, end time.Time, all bool, t style.Theme) string {
-	exams := collectUpcomingExams(subjects, start, end, all)
+func RenderUpcomingExams(subjects []models.SubjectItem, limit int, start, end time.Time, all bool, filter string, t style.Theme) string {
+	exams := collectUpcomingExams(subjects, start, end, all, filter)
+
 	if len(exams) == 0 {
+		if filter != "" {
+			return t.Dim.Render("No exams for " + filter)
+		}
 		return t.Dim.Render("No exams this week")
 	}
 
@@ -50,9 +54,12 @@ func RenderUpcomingExams(subjects []models.SubjectItem, limit int, start, end ti
 	return b.String()
 }
 
-func collectUpcomingExams(subjects []models.SubjectItem, start, end time.Time, all bool) []upcomingExam {
+func collectUpcomingExams(subjects []models.SubjectItem, start, end time.Time, all bool, filter string) []upcomingExam {
 	list := make([]upcomingExam, 0)
 	for _, subject := range subjects {
+		if filter != "" && !strings.EqualFold(subject.Code, filter) {
+			continue
+		}
 		for _, exam := range subject.Exams {
 			date, ok := parseExamDate(exam.Date)
 			if !ok {
@@ -110,16 +117,19 @@ func RenderChecklist(items []models.ChecklistItem, selected int, showCursor bool
 			b.WriteString("\n")
 		}
 		box := "[ ]"
-		style := t.CheckboxTodo
+		rowStyle := t.CheckboxTodo
 		if item.Done {
 			box = "[x]"
-			style = t.CheckboxDone
+			rowStyle = t.CheckboxDone
 		}
 		if showCursor && i == selected {
-			style = t.RowActive
+			rowStyle = t.RowActive
 		}
-		line := fmt.Sprintf("%s %s", box, item.Text)
-		b.WriteString(style.Render(line))
+		if item.Subject != "" {
+			b.WriteString(rowStyle.Render(box) + " " + t.SubjectTag.Render(item.Subject) + "  " + rowStyle.Render(item.Text))
+		} else {
+			b.WriteString(rowStyle.Render(fmt.Sprintf("%s %s", box, item.Text)))
+		}
 	}
 	return b.String()
 }

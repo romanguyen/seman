@@ -1,9 +1,10 @@
 package models
 
 type ChecklistItem struct {
-	Text string
-	Done bool
-	Due  string
+	Text    string
+	Done    bool
+	Due     string
+	Subject string
 }
 
 type ProjectItem struct {
