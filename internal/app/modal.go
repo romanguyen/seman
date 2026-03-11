@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -18,11 +19,14 @@ const (
 	modalAddExam
 	modalAddProject
 	modalAddTodo
+	modalBulkAddTodo
 	modalEditSubject
 	modalEditExam
 	modalEditProject
 	modalEditTodo
 	modalEditLofiURL
+	modalFilterExam
+	modalSubjectFilter
 	modalConfirm
 )
 
@@ -30,6 +34,7 @@ type confirmKind int
 
 const (
 	confirmDeleteSubject confirmKind = iota
+	confirmDeleteExam
 	confirmDeleteProject
 	confirmDeleteTodo
 	confirmClearAll
@@ -38,6 +43,7 @@ const (
 type confirmAction struct {
 	kind       confirmKind
 	subjectIdx int
+	examIdx    int
 	projectIdx int
 }
 
@@ -96,6 +102,12 @@ func (m *Model) applyDropdownSelection() {
 }
 
 func (m Model) updateModal(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.modal == modalSubjectFilter {
+		if key, ok := msg.(tea.KeyMsg); ok {
+			return m.updateSubjectFilterModal(key)
+		}
+		return m, nil
+	}
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		key := msg.String()
@@ -105,12 +117,15 @@ func (m Model) updateModal(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "enter":
 			if m.modal == modalConfirm {
+				m.pushUndo()
 				m.applyConfirmAction()
 				m.closeModal()
 				return m, nil
 			}
 			if m.formFocus == len(m.formFields)-1 {
+				m.pushUndo()
 				if err := m.submitForm(); err != nil {
+					m.undoStack = m.undoStack[:len(m.undoStack)-1]
 					m.modalError = err.Error()
 					return m, nil
 				}
@@ -202,6 +217,44 @@ func (m *Model) closeModal() {
 	m.editTodoIdx = -1
 	m.dropdownMatches = nil
 	m.dropdownCursor = -1
+	m.filterModalActive = nil
+	m.filterModalCursor = 0
+}
+
+func (m Model) updateSubjectFilterModal(key tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch key.String() {
+	case "esc":
+		m.closeModal()
+	case "enter":
+		m.applySubjectFilter()
+		m.closeModal()
+	case "c", "C":
+		m.filterModalActive = make([]bool, len(m.subjects))
+	case "j", "down":
+		if m.filterModalCursor < len(m.subjects)-1 {
+			m.filterModalCursor++
+		}
+	case "k", "up":
+		if m.filterModalCursor > 0 {
+			m.filterModalCursor--
+		}
+	case " ":
+		if m.filterModalCursor >= 0 && m.filterModalCursor < len(m.filterModalActive) {
+			m.filterModalActive[m.filterModalCursor] = !m.filterModalActive[m.filterModalCursor]
+		}
+	}
+	return m, nil
+}
+
+func (m *Model) applySubjectFilter() {
+	var filters []string
+	for i, active := range m.filterModalActive {
+		if active && i < len(m.subjects) {
+			filters = append(filters, m.subjects[i].Code)
+		}
+	}
+	m.subjectFilters = filters
+	m.refreshAllFilters()
 }
 
 func (m *Model) setFormFocus(idx int) {
@@ -228,6 +281,10 @@ func (m *Model) openAddSubject() {
 }
 
 func (m *Model) openAddExam() {
+	m.openAddExamWithFilter()
+}
+
+func (m *Model) openAddExamWithFilter() {
 	inputWidth := m.modalInputWidth()
 	fields := []formField{
 		newFormField("Subject", inputWidth, true),
@@ -236,7 +293,26 @@ func (m *Model) openAddExam() {
 		newFormField("Retakes", inputWidth, false),
 		newFormField("Priority", inputWidth, false),
 	}
+	if m.activeTab == tabExams && len(m.subjectFilters) == 1 {
+		fields[0].input.SetValue(m.subjectFilters[0])
+	}
+	fields[2].input.Placeholder = "Jan 2, 2006 @ 15:04"
+	fields[3].input.Placeholder = "Jan 5, 2006, Jan 8, 2006"
+	fields[4].input.Placeholder = "HIGH / MED / LOW"
 	m.openFormModal(modalAddExam, "Add Exam", fields)
+}
+
+func (m *Model) openSubjectFilter() {
+	m.filterModalActive = make([]bool, len(m.subjects))
+	for i, s := range m.subjects {
+		m.filterModalActive[i] = m.isFiltered(s.Code)
+	}
+	m.filterModalCursor = 0
+	m.modal = modalSubjectFilter
+	m.modalTitle = "Filter by Subject"
+	m.modalHint = "↑↓ navigate · Space toggle · Enter apply · C clear all · Esc cancel"
+	m.modalError = ""
+	m.formFields = nil
 }
 
 func (m *Model) openAddProject() {
@@ -254,8 +330,22 @@ func (m *Model) openAddTodo() {
 	inputWidth := m.modalInputWidth()
 	fields := []formField{
 		newFormField("Task", inputWidth, true),
+		newFormField("Subject", inputWidth, false),
 	}
 	m.openFormModal(modalAddTodo, "Add Todo", fields)
+}
+
+func (m *Model) openBulkAddTodo() {
+	w := m.modalInputWidth()
+	fields := []formField{
+		newFormField("Task Name", w, true),
+		newFormField("Subject", w, false),
+		newFormField("Weeks", w, true),
+		newFormField("Start #", w, false),
+	}
+	fields[2].input.Placeholder = "e.g. 12"
+	fields[3].input.Placeholder = "1"
+	m.openFormModal(modalBulkAddTodo, "Bulk Add Todos", fields)
 }
 
 func (m *Model) openEditCurrent() {
@@ -263,11 +353,7 @@ func (m *Model) openEditCurrent() {
 	case tabSubjects:
 		m.openEditSubject()
 	case tabExams:
-		if m.semesterFocus == focusExams {
-			m.openEditExam()
-			return
-		}
-		m.openEditSubject()
+		m.openEditExam()
 	case tabTodos:
 		m.openEditTodo()
 	case tabProjects:
@@ -292,11 +378,11 @@ func (m *Model) openEditSubject() {
 }
 
 func (m *Model) openEditExam() {
-	exams := m.examsForSelected()
-	if len(exams) == 0 || m.examCursor < 0 || m.examCursor >= len(exams) {
+	if m.examCursor < 0 || m.examCursor >= len(m.flatExams) {
 		return
 	}
-	exam := exams[m.examCursor]
+	flat := m.flatExams[m.examCursor]
+	exam := flat.Exam
 	inputWidth := m.modalInputWidth()
 	fields := []formField{
 		newFormField("Exam Name", inputWidth, true),
@@ -308,9 +394,9 @@ func (m *Model) openEditExam() {
 	fields[1].input.SetValue(exam.Date)
 	fields[2].input.SetValue(strings.Join(exam.Retakes, ", "))
 	fields[3].input.SetValue(exam.Priority)
-	m.editSubjectIdx = m.selectedSubj
-	m.editExamIdx = m.examCursor
-	m.openFormModal(modalEditExam, "Edit Exam", fields)
+	m.editSubjectIdx = flat.SubjectIdx
+	m.editExamIdx = flat.ExamIdx
+	m.openFormModal(modalEditExam, "Edit Exam ("+flat.SubjectCode+")", fields)
 }
 
 func (m *Model) openEditProject() {
@@ -341,8 +427,10 @@ func (m *Model) openEditTodo() {
 	inputWidth := m.modalInputWidth()
 	fields := []formField{
 		newFormField("Task", inputWidth, true),
+		newFormField("Subject", inputWidth, false),
 	}
 	fields[0].input.SetValue(item.Text)
+	fields[1].input.SetValue(item.Subject)
 	m.editTodoIdx = m.checklistCursor
 	m.openFormModal(modalEditTodo, "Edit Todo", fields)
 }
@@ -357,6 +445,12 @@ func (m *Model) openEditLofiURL() {
 }
 
 func (m *Model) openFormModal(kind modalKind, title string, fields []formField) {
+	t := style.ThemeOf(m.themeName)
+	for i := range fields {
+		fields[i].input.TextStyle = t.InputText
+		fields[i].input.PlaceholderStyle = t.InputHint
+		fields[i].input.CursorStyle = t.InputCursor
+	}
 	m.modal = kind
 	m.formFields = fields
 	m.modalTitle = title
@@ -425,9 +519,14 @@ func (m *Model) submitForm() error {
 			Retakes:  retakes,
 			Priority: strings.ToUpper(priority),
 		})
-		m.selectedSubj = idx
-		m.examCursor = len(m.subjects[idx].Exams) - 1
-		m.sortExamsByPriority()
+		newExamIdx := len(m.subjects[idx].Exams) - 1
+		m.refreshFlatExams()
+		for i, flat := range m.flatExams {
+			if flat.SubjectIdx == idx && flat.ExamIdx == newExamIdx {
+				m.examCursor = i
+				break
+			}
+		}
 		m.persist()
 	case modalAddProject:
 		name := strings.TrimSpace(m.formFields[0].input.Value())
@@ -448,17 +547,64 @@ func (m *Model) submitForm() error {
 		})
 		m.projectCursor = len(m.projects) - 1
 		m.sortProjectsByStatus()
+		m.refreshProjectFilter()
 		m.persist()
 	case modalAddTodo:
 		task := strings.TrimSpace(m.formFields[0].input.Value())
+		subject := strings.TrimSpace(m.formFields[1].input.Value())
 		if task == "" {
 			return fmt.Errorf("Task is required.")
 		}
+		if subject != "" && findSubjectIndex(m.subjects, subject) < 0 {
+			return fmt.Errorf("Subject not found.")
+		}
+		subjectCode := strings.ToUpper(subject)
 		m.checklistItems = append(m.checklistItems, models.ChecklistItem{
-			Text: task,
-			Done: false,
-			Due:  m.weekStart.Format("2006-01-02"),
+			Text:    task,
+			Done:    false,
+			Due:     m.weekStart.Format("2006-01-02"),
+			Subject: subjectCode,
 		})
+		m.checklistCursor = len(m.checklistItems) - 1
+		m.sortChecklistByDone()
+		m.persist()
+		m.refreshChecklistView()
+	case modalBulkAddTodo:
+		baseName := strings.TrimSpace(m.formFields[0].input.Value())
+		subject := strings.TrimSpace(m.formFields[1].input.Value())
+		weeksStr := strings.TrimSpace(m.formFields[2].input.Value())
+		startStr := strings.TrimSpace(m.formFields[3].input.Value())
+		if baseName == "" {
+			return fmt.Errorf("Task Name is required.")
+		}
+		weeks, err := strconv.Atoi(weeksStr)
+		if err != nil || weeks < 1 {
+			return fmt.Errorf("Weeks must be a positive number.")
+		}
+		if weeks > 52 {
+			return fmt.Errorf("Weeks must be 52 or fewer.")
+		}
+		startNum := 1
+		if startStr != "" {
+			n, err := strconv.Atoi(startStr)
+			if err != nil || n < 1 {
+				return fmt.Errorf("Start # must be a positive number.")
+			}
+			startNum = n
+		}
+		if subject != "" && findSubjectIndex(m.subjects, subject) < 0 {
+			return fmt.Errorf("Subject not found.")
+		}
+		subjectCode := strings.ToUpper(subject)
+		for i := 0; i < weeks; i++ {
+			due := m.weekStart.AddDate(0, 0, i*7)
+			m.checklistItems = append(m.checklistItems, models.ChecklistItem{
+				Text:    fmt.Sprintf("%s - Week %d", baseName, startNum+i),
+				Done:    false,
+				Due:     due.Format("2006-01-02"),
+				Subject: subjectCode,
+			})
+		}
 		m.checklistCursor = len(m.checklistItems) - 1
 		m.sortChecklistByDone()
 		m.persist()
@@ -495,8 +641,15 @@ func (m *Model) submitForm() error {
 		exams[m.editExamIdx].Retakes = splitCSV(retakesRaw)
 		exams[m.editExamIdx].Priority = strings.ToUpper(priority)
 		m.subjects[m.editSubjectIdx].Exams = exams
-		m.examCursor = m.editExamIdx
-		m.sortExamsByPriority()
+		editedSI := m.editSubjectIdx
+		editedEI := m.editExamIdx
+		m.refreshFlatExams()
+		for i, flat := range m.flatExams {
+			if flat.SubjectIdx == editedSI && flat.ExamIdx == editedEI {
+				m.examCursor = i
+				break
+			}
+		}
 		m.persist()
 	case modalEditProject:
 		if m.editProjectIdx < 0 || m.editProjectIdx >= len(m.projects) {
@@ -518,19 +671,27 @@ func (m *Model) submitForm() error {
 		m.projects[m.editProjectIdx].Status = strings.ToUpper(status)
 		m.projectCursor = m.editProjectIdx
 		m.sortProjectsByStatus()
+		m.refreshProjectFilter()
 		m.persist()
 	case modalEditTodo:
 		if m.editTodoIdx < 0 || m.editTodoIdx >= len(m.checklistItems) {
 			return nil
 		}
 		task := strings.TrimSpace(m.formFields[0].input.Value())
+		subject := strings.TrimSpace(m.formFields[1].input.Value())
 		if task == "" {
 			return fmt.Errorf("Task is required.")
 		}
+		if subject != "" && findSubjectIndex(m.subjects, subject) < 0 {
+			return fmt.Errorf("Subject not found.")
+		}
 		m.checklistItems[m.editTodoIdx].Text = task
+		m.checklistItems[m.editTodoIdx].Subject = strings.ToUpper(subject)
 		m.sortChecklistByDone()
 		m.persist()
 		m.refreshChecklistView()
+	case modalFilterExam:
+		// legacy: handled by modalSubjectFilter now; kept for safety
 	case modalEditLofiURL:
 		url := strings.TrimSpace(m.formFields[0].input.Value())
 		if url == "" {
@@ -582,11 +743,12 @@ func (m *Model) queueDelete() {
 		message := fmt.Sprintf("Delete subject %s and its exams?", m.subjects[m.selectedSubj].Code)
 		m.confirmOrApply(action, message)
 	case tabExams:
-		if len(m.subjects) == 0 {
+		if len(m.flatExams) == 0 || m.examCursor < 0 || m.examCursor >= len(m.flatExams) {
 			return
 		}
-		action := confirmAction{kind: confirmDeleteSubject, subjectIdx: m.selectedSubj}
-		message := fmt.Sprintf("Delete subject %s and its exams?", m.subjects[m.selectedSubj].Code)
+		flat := m.flatExams[m.examCursor]
+		action := confirmAction{kind: confirmDeleteExam, subjectIdx: flat.SubjectIdx, examIdx: flat.ExamIdx}
+		message := fmt.Sprintf("Delete exam \"%s\" (%s)?", flat.Exam.Name, flat.SubjectCode)
 		m.confirmOrApply(action, message)
 	case tabProjects:
 		if len(m.projects) == 0 {
@@ -626,6 +788,16 @@ func (m *Model) confirmOrApply(action confirmAction, message string) {
 
 func (m *Model) applyConfirmAction() {
 	switch m.confirmAction.kind {
+	case confirmDeleteExam:
+		si := m.confirmAction.subjectIdx
+		ei := m.confirmAction.examIdx
+		if si >= 0 && si < len(m.subjects) {
+			exams := m.subjects[si].Exams
+			if ei >= 0 && ei < len(exams) {
+				m.subjects[si].Exams = append(exams[:ei], exams[ei+1:]...)
+			}
+		}
+		m.refreshFlatExams()
 	case confirmDeleteSubject:
 		if m.confirmAction.subjectIdx >= 0 && m.confirmAction.subjectIdx < len(m.subjects) {
 			m.subjects = append(m.subjects[:m.confirmAction.subjectIdx], m.subjects[m.confirmAction.subjectIdx+1:]...)
@@ -645,6 +817,7 @@ func (m *Model) applyConfirmAction() {
 			if m.projectCursor < 0 {
 				m.projectCursor = 0
 			}
+			m.refreshProjectFilter()
 		}
 	case confirmDeleteTodo:
 		if m.confirmAction.projectIdx >= 0 && m.confirmAction.projectIdx < len(m.checklistItems) {
@@ -665,7 +838,8 @@ func (m *Model) applyConfirmAction() {
 		m.weeklyExams = nil
 		m.selectedSubj = 0
 		m.projectCursor = 0
-		m.refreshChecklistView()
+		m.projectVisible = nil
+		m.refreshAllFilters()
 	}
 	m.persist()
 }

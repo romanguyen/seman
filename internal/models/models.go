@@ -1,9 +1,10 @@
 package models
 
 type ChecklistItem struct {
-	Text string
-	Done bool
-	Due  string
+	Text    string
+	Done    bool
+	Due     string
+	Subject string
 }
 
 type ProjectItem struct {
@@ -18,6 +19,13 @@ type ExamItem struct {
 	Date     string
 	Retakes  []string
 	Priority string
+}
+
+type FlatExam struct {
+	SubjectCode string
+	SubjectIdx  int
+	ExamIdx     int
+	Exam        ExamItem
 }
 
 type SubjectItem struct {

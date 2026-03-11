@@ -3,6 +3,7 @@ package components
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/romanguyen/seman/internal/models"
 	"github.com/romanguyen/seman/internal/style"
@@ -35,50 +36,71 @@ func RenderSubjects(items []models.SubjectItem, selected int, t style.Theme) str
 	return b.String()
 }
 
-func RenderSubjectTitle(items []models.SubjectItem, selected int, t style.Theme) string {
-	if selected < 0 || selected >= len(items) {
-		return ""
-	}
-	subj := items[selected]
-	title := fmt.Sprintf("%s (%s)", subj.Name, subj.Code)
-	return t.Title.Render(title)
-}
-
-func RenderExamList(exams []models.ExamItem, examIdx int, highlight bool, t style.Theme) string {
+func RenderFlatExams(exams []models.FlatExam, cursor int, filter string, t style.Theme) string {
 	if len(exams) == 0 {
-		return t.Dim.Render("No exams this week")
+		if filter != "" {
+			return t.Dim.Render("No exams for " + filter + " in this period")
+		}
+		return t.Dim.Render("No exams — press [A] to add one")
 	}
 
+	now := time.Now()
 	var b strings.Builder
-	for i, exam := range exams {
+	for i, flat := range exams {
 		if i > 0 {
 			b.WriteString("\n\n")
 		}
+		selected := i == cursor
 		nameStyle := t.Text
 		prefix := "  "
-		if highlight && i == examIdx {
+		if selected {
 			nameStyle = t.RowActive
 			prefix = "> "
 		}
-		b.WriteString(nameStyle.Render(prefix + exam.Name))
-		if exam.Date != "" {
-			b.WriteString("\n")
-			b.WriteString(t.Dim.Render("Current date: " + exam.Date))
+
+		// Line 1: prefix + name + subject tag (when not filtered)
+		nameLine := prefix + flat.Exam.Name
+		if filter == "" && flat.SubjectCode != "" {
+			nameLine += "  (" + flat.SubjectCode + ")"
 		}
-		if len(exam.Retakes) > 0 {
+		if flat.Exam.Priority != "" {
+			b.WriteString(nameStyle.Render(nameLine) + "  ")
+			b.WriteString(RenderPriority(flat.Exam.Priority))
+		} else {
+			b.WriteString(nameStyle.Render(nameLine))
+		}
+
+		// Line 2: date + countdown
+		if flat.Exam.Date != "" {
 			b.WriteString("\n")
-			b.WriteString(t.Dim.Render("Retake dates:"))
-			for _, date := range exam.Retakes {
-				b.WriteString("\n")
-				b.WriteString(t.Dim.Render(" - " + date))
+			dateInfo := "  " + flat.Exam.Date
+			if date, ok := parseExamDate(flat.Exam.Date); ok {
+				days := int(date.Sub(now).Hours() / 24)
+				var countdown string
+				switch {
+				case days < -1:
+					countdown = fmt.Sprintf(" · %d days ago", -days)
+				case days == -1:
+					countdown = " · yesterday"
+				case days == 0:
+					countdown = " · today"
+				case days == 1:
+					countdown = " · tomorrow"
+				case days < 14:
+					countdown = fmt.Sprintf(" · in %d days", days)
+				default:
+					countdown = fmt.Sprintf(" · in %d weeks", days/7)
+				}
+				dateInfo += countdown
 			}
+			b.WriteString(t.Dim.Render(dateInfo))
 		}
-		if exam.Priority != "" {
+
+		// Retakes (compact, single line)
+		if len(flat.Exam.Retakes) > 0 {
 			b.WriteString("\n")
-			b.WriteString(t.Dim.Render("Priority: "))
-			b.WriteString(RenderPriority(exam.Priority))
+			b.WriteString(t.Dim.Render("  Retakes: " + strings.Join(flat.Exam.Retakes, ", ")))
 		}
 	}
-
 	return b.String()
 }

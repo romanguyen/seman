@@ -23,12 +23,15 @@ type Model struct {
 	checklistCursor int
 	todoVisible     []int
 	projects        []models.ProjectItem
+	projectVisible  []int
 	subjects        []models.SubjectItem
-	selectedSubj    int
-	examCursor      int
-	examVisible     []int
-	semesterFocus   semesterFocus
-	weekLabel       string
+	selectedSubj         int
+	examCursor           int
+	subjectFilters       []string
+	filterModalActive    []bool
+	filterModalCursor    int
+	flatExams            []models.FlatExam
+	weekLabel          string
 	weekStart       time.Time
 	weeklyExams     []string
 	projectCursor   int
@@ -42,6 +45,7 @@ type Model struct {
 	lofiListHeight  int
 	lofiNow         int
 	lofiReload      bool
+	themeName       string
 	modal            modalKind
 	formFields       []formField
 	formFocus        int
@@ -56,14 +60,8 @@ type Model struct {
 	editProjectIdx  int
 	editTodoIdx     int
 	store           storage.Store
+	undoStack       []undoSnapshot
 }
-
-type semesterFocus int
-
-const (
-	focusSubjects semesterFocus = iota
-	focusExams
-)
 
 const (
 	tabDashboard = iota
@@ -85,7 +83,6 @@ func NewModel(store storage.Store, data storage.SemesterData, hasData bool) Mode
 		checklist:      vp,
 		selectedSubj:   0,
 		examCursor:     0,
-		semesterFocus:  focusSubjects,
 		projectCursor:  0,
 		editSubjectIdx: -1,
 		editExamIdx:    -1,
@@ -137,6 +134,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			m.shutdownLofi()
 			return m, tea.Quit
+		case "ctrl+z":
+			m.undo()
+			return m, nil
 		case "g", "G":
 			m.toggleGlobalView()
 			return m, nil
@@ -147,7 +147,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.shiftWeek(1)
 			return m, nil
 		case "a", "A":
-			m.openAddExam()
+			m.openAddExamWithFilter()
 			return m, nil
 		case "s", "S":
 			m.openAddSubject()
@@ -158,6 +158,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "e", "E":
 			m.openEditCurrent()
 			return m, nil
+		case "f", "F":
+			switch m.activeTab {
+			case tabDashboard, tabExams, tabTodos, tabProjects:
+				m.openSubjectFilter()
+				return m, nil
+			}
+		case "r", "R":
+			switch m.activeTab {
+			case tabDashboard, tabExams, tabTodos, tabProjects:
+				m.subjectFilters = nil
+				m.refreshAllFilters()
+				return m, nil
+			}
 		case "n", "N":
 			if m.activeTab == tabTodos {
 				m.openAddTodo()
@@ -177,6 +190,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.persist()
 				return m, nil
 			}
+		case "t", "T":
+			if m.activeTab == tabSettings {
+				m.cycleTheme()
+				return m, nil
+			}
+			m.jumpToCurrentWeek()
+			return m, nil
 		case "w", "W":
 			if m.activeTab == tabSettings {
 				m.cycleWeekSpan()
@@ -210,6 +230,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			case " ", "enter", "x", "X":
 				m.toggleChecklistItem()
+				return m, nil
+			case "b", "B":
+				m.openBulkAddTodo()
 				return m, nil
 			}
 
@@ -263,14 +286,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.activeTab == tabExams {
 			switch key {
-			case "tab":
-				m.toggleSemesterFocus()
-				return m, nil
 			case "j", "down":
-				m.moveSemesterCursor(1)
+				m.moveExamCursor(1)
 				return m, nil
 			case "k", "up":
-				m.moveSemesterCursor(-1)
+				m.moveExamCursor(-1)
 				return m, nil
 			}
 		}
@@ -278,14 +298,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.activeTab == tabProjects {
 			switch key {
 			case "j", "down":
-				if m.projectCursor < len(m.projects)-1 {
-					m.projectCursor++
-				}
+				m.moveProjectCursor(1)
 				return m, nil
 			case "k", "up":
-				if m.projectCursor > 0 {
-					m.projectCursor--
-				}
+				m.moveProjectCursor(-1)
 				return m, nil
 			}
 		}
@@ -325,7 +341,7 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
-	t := style.NewTheme()
+	t := style.ThemeOf(m.themeName)
 	header := components.RenderHeader(m.width, t)
 	tabs := components.RenderTabs(m.activeTab, m.width, m.weekLabel, m.tabItems(), t)
 	divider := components.RenderDivider(m.width, t)
@@ -333,7 +349,8 @@ func (m Model) View() string {
 	state := m.viewState()
 	main := screens.RenderMain(state, m.width, mainHeight, t)
 	if state.Modal.Mode != components.ModalHidden {
-		main = screens.RenderModal(state, m.width, mainHeight, t)
+		modal := components.RenderModalContent(state.Modal, m.width, t)
+		main = components.PlaceOverlay(main, modal)
 	}
 	footer := components.RenderFooter(m.width, len(m.tabItems()), m.activeTab, t)
 
@@ -370,6 +387,10 @@ func (m *Model) applyData(data storage.SemesterData) {
 	m.checklistItems = data.Checklist
 	m.weeklyExams = data.WeeklyExams
 	m.confirmOn = data.ConfirmOn
+	m.themeName = data.Theme
+	if m.themeName == "" {
+		m.themeName = "green"
+	}
 	m.setWeekSpanFromData(data.WeekSpan)
 	m.setWeekStartFromData(data.WeekStart)
 	m.lofi.enabled = data.LofiEnabled
@@ -380,8 +401,7 @@ func (m *Model) applyData(data storage.SemesterData) {
 	m.sortExamsByPriority()
 	m.sortProjectsByStatus()
 	m.sortChecklistByDone()
-	m.refreshExamFilter()
-	m.refreshChecklistView()
+	m.refreshAllFilters()
 
 	if m.selectedSubj >= len(m.subjects) {
 		m.selectedSubj = len(m.subjects) - 1
@@ -395,7 +415,7 @@ func (m *Model) applyData(data storage.SemesterData) {
 	if m.projectCursor < 0 {
 		m.projectCursor = 0
 	}
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 	if m.lofiNow >= len(m.lofiPlaylist) {
 		m.lofiNow = len(m.lofiPlaylist) - 1
 	}
@@ -422,7 +442,21 @@ func (m Model) exportData() storage.SemesterData {
 		WeekSpan:    m.weekSpan,
 		LofiEnabled: m.lofi.enabled,
 		LofiURL:     m.lofi.url,
+		Theme:       m.themeName,
 	}
+}
+
+func (m *Model) cycleTheme() {
+	names := style.ThemeNames
+	cur := 0
+	for i, n := range names {
+		if n == m.themeName {
+			cur = i
+			break
+		}
+	}
+	m.themeName = names[(cur+1)%len(names)]
+	m.persist()
 }
 
 func (m *Model) persist() {
@@ -434,7 +468,7 @@ func (m *Model) persist() {
 
 func (m *Model) refreshChecklistView() {
 	m.refreshTodoFilter()
-	t := style.NewTheme()
+	t := style.ThemeOf(m.themeName)
 	filtered := make([]models.ChecklistItem, 0, len(m.todoVisible))
 	for _, idx := range m.todoVisible {
 		if idx >= 0 && idx < len(m.checklistItems) {
@@ -520,6 +554,7 @@ func (m *Model) toggleChecklistItem() {
 	if idx < 0 || idx >= len(m.checklistItems) {
 		return
 	}
+	m.pushUndo()
 	m.checklistItems[idx].Done = !m.checklistItems[idx].Done
 	m.sortChecklistByDone()
 	m.persist()
@@ -541,7 +576,15 @@ func (m *Model) setWeekStartFromData(value string) {
 func (m *Model) shiftWeek(delta int) {
 	m.weekStart = m.weekStart.AddDate(0, 0, delta*7)
 	m.updateWeekLabel()
-	m.refreshExamFilter()
+	m.refreshFlatExams()
+	m.refreshChecklistView()
+	m.persist()
+}
+
+func (m *Model) jumpToCurrentWeek() {
+	m.weekStart = weekStartOf(time.Now())
+	m.updateWeekLabel()
+	m.refreshFlatExams()
 	m.refreshChecklistView()
 	m.persist()
 }
@@ -572,7 +615,7 @@ func (m *Model) toggleGlobalView() {
 		m.weekSpan = -1
 	}
 	m.updateWeekLabel()
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 	m.refreshChecklistView()
 	m.persist()
 }
@@ -591,7 +634,7 @@ func (m *Model) cycleWeekSpan() {
 		m.weekSpan = 1
 	}
 	m.updateWeekLabel()
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 	m.refreshChecklistView()
 	m.persist()
 }
@@ -608,20 +651,20 @@ func (m *Model) weekRange() (time.Time, time.Time, bool) {
 func (m *Model) refreshTodoFilter() {
 	start, end, all := m.weekRange()
 	visible := make([]int, 0, len(m.checklistItems))
-	if all {
-		for i := range m.checklistItems {
-			visible = append(visible, i)
+	for i, item := range m.checklistItems {
+		if len(m.subjectFilters) > 0 && !m.isFiltered(item.Subject) {
+			continue
 		}
-	} else {
-		for i, item := range m.checklistItems {
+		if !all {
 			due, ok := parseTodoDate(item.Due)
 			if !ok {
 				continue
 			}
-			if !due.Before(start) && due.Before(end) {
-				visible = append(visible, i)
+			if due.Before(start) || !due.Before(end) {
+				continue
 			}
 		}
+		visible = append(visible, i)
 	}
 	m.todoVisible = visible
 	if len(m.todoVisible) == 0 {
@@ -633,27 +676,88 @@ func (m *Model) refreshTodoFilter() {
 	}
 }
 
-func (m *Model) refreshExamFilter() {
-	exams := m.examsForSelected()
-	start, end, all := m.weekRange()
-	visible := make([]int, 0, len(exams))
-	if all {
-		for i := range exams {
-			visible = append(visible, i)
-		}
-	} else {
-		for i, exam := range exams {
-			date, ok := parseExamDate(exam.Date)
-			if !ok {
-				continue
-			}
-			if !date.Before(start) && date.Before(end) {
-				visible = append(visible, i)
-			}
+func (m *Model) isFiltered(subject string) bool {
+	for _, f := range m.subjectFilters {
+		if strings.EqualFold(f, subject) {
+			return true
 		}
 	}
-	m.examVisible = visible
-	m.normalizeExamCursor()
+	return false
+}
+
+func (m *Model) subjectFilterLabel() string {
+	if len(m.subjectFilters) == 0 {
+		return ""
+	}
+	return strings.Join(m.subjectFilters, ", ")
+}
+
+func (m *Model) refreshProjectFilter() {
+	visible := make([]int, 0, len(m.projects))
+	for i, p := range m.projects {
+		if len(m.subjectFilters) > 0 && !m.isFiltered(p.Subject) {
+			continue
+		}
+		visible = append(visible, i)
+	}
+	m.projectVisible = visible
+	if len(m.projectVisible) == 0 {
+		m.projectCursor = -1
+		return
+	}
+	if m.visibleIndex(m.projectVisible, m.projectCursor) == -1 {
+		m.projectCursor = m.projectVisible[0]
+	}
+}
+
+func (m *Model) refreshAllFilters() {
+	m.refreshFlatExams()
+	m.refreshProjectFilter()
+	m.refreshChecklistView() // internally calls refreshTodoFilter
+}
+
+func (m *Model) refreshFlatExams() {
+	start, end, all := m.weekRange()
+	var list []models.FlatExam
+	for si, subject := range m.subjects {
+		if len(m.subjectFilters) > 0 && !m.isFiltered(subject.Code) {
+			continue
+		}
+		for ei, exam := range subject.Exams {
+			if !all {
+				date, ok := parseExamDate(exam.Date)
+				if !ok {
+					continue
+				}
+				if date.Before(start) || !date.Before(end) {
+					continue
+				}
+			}
+			list = append(list, models.FlatExam{
+				SubjectCode: subject.Code,
+				SubjectIdx:  si,
+				ExamIdx:     ei,
+				Exam:        exam,
+			})
+		}
+	}
+	sort.Slice(list, func(i, j int) bool {
+		di, oki := parseExamDate(list[i].Exam.Date)
+		dj, okj := parseExamDate(list[j].Exam.Date)
+		if !oki {
+			return false
+		}
+		if !okj {
+			return true
+		}
+		return di.Before(dj)
+	})
+	m.flatExams = list
+	if len(m.flatExams) == 0 {
+		m.examCursor = -1
+	} else if m.examCursor < 0 || m.examCursor >= len(m.flatExams) {
+		m.examCursor = 0
+	}
 }
 
 func (m *Model) visibleIndex(items []int, value int) int {
@@ -663,6 +767,38 @@ func (m *Model) visibleIndex(items []int, value int) int {
 		}
 	}
 	return -1
+}
+
+func (m *Model) moveExamCursor(delta int) {
+	if len(m.flatExams) == 0 {
+		return
+	}
+	m.examCursor += delta
+	if m.examCursor < 0 {
+		m.examCursor = 0
+	}
+	if m.examCursor >= len(m.flatExams) {
+		m.examCursor = len(m.flatExams) - 1
+	}
+}
+
+func (m *Model) moveProjectCursor(delta int) {
+	if len(m.projectVisible) == 0 {
+		return
+	}
+	pos := m.visibleIndex(m.projectVisible, m.projectCursor)
+	if pos < 0 {
+		pos = 0
+	} else {
+		pos += delta
+	}
+	if pos < 0 {
+		pos = 0
+	}
+	if pos >= len(m.projectVisible) {
+		pos = len(m.projectVisible) - 1
+	}
+	m.projectCursor = m.projectVisible[pos]
 }
 
 func (m *Model) ensureTodoDueDates() {
@@ -682,39 +818,35 @@ func (m *Model) ensureTodoDueDates() {
 	}
 }
 
-func (m *Model) filteredExams() []models.ExamItem {
-	exams := m.examsForSelected()
-	if len(m.examVisible) == 0 {
-		return nil
-	}
-	filtered := make([]models.ExamItem, 0, len(m.examVisible))
-	for _, idx := range m.examVisible {
-		if idx >= 0 && idx < len(exams) {
-			filtered = append(filtered, exams[idx])
-		}
-	}
-	return filtered
-}
-
 func (m Model) viewState() screens.State {
 	start, end, all := m.weekRange()
+
+	visibleProjects := make([]models.ProjectItem, 0, len(m.projectVisible))
+	for _, idx := range m.projectVisible {
+		if idx >= 0 && idx < len(m.projects) {
+			visibleProjects = append(visibleProjects, m.projects[idx])
+		}
+	}
+	visibleProjectCursor := m.visibleIndex(m.projectVisible, m.projectCursor)
+
 	state := screens.State{
 		ActiveTab:     m.activeTab,
 		ConfirmOn:     m.confirmOn,
+		ThemeName:     m.themeName,
+		SubjectFilter: m.subjectFilterLabel(),
 		ChecklistView: m.checklist.View(),
-		Projects:      m.projects,
+		Projects:      visibleProjects,
 		Subjects:      m.subjects,
 		SelectedSubj:  m.selectedSubj,
-		ExamCursor:    m.visibleIndex(m.examVisible, m.examCursor),
-		FilteredExams: m.filteredExams(),
-		FocusExams:    m.semesterFocus == focusExams,
+		ExamCursor:        m.examCursor,
+		FlatExams:         m.flatExams,
 		WeekLabel:     m.weekLabel,
 		FilterStart:   start,
 		FilterEnd:     end,
 		FilterAll:     all,
 		WeekSpan:      m.weekSpan,
 		WeeklyExams:   m.weeklyExams,
-		ProjectCursor: m.projectCursor,
+		ProjectCursor: visibleProjectCursor,
 		LofiEnabled:   m.lofi.enabled,
 		LofiURL:       m.lofi.url,
 		LofiStatus:    m.lofi.status,
@@ -753,6 +885,15 @@ func (m Model) viewState() screens.State {
 	case modalConfirm:
 		modalState.Mode = components.ModalConfirm
 		modalState.Message = m.modalError
+	case modalSubjectFilter:
+		modalState.Mode = components.ModalSubjectSelect
+		items := make([]string, len(m.subjects))
+		for i, s := range m.subjects {
+			items[i] = s.Code
+		}
+		modalState.SelectItems = items
+		modalState.SelectActive = m.filterModalActive
+		modalState.SelectCursor = m.filterModalCursor
 	default:
 		modalState.Mode = components.ModalForm
 		modalState.Error = m.modalError
@@ -766,21 +907,6 @@ func (m *Model) examsForSelected() []models.ExamItem {
 		return nil
 	}
 	return m.subjects[m.selectedSubj].Exams
-}
-
-func (m *Model) normalizeExamCursor() {
-	if len(m.examVisible) == 0 {
-		m.examCursor = -1
-		m.semesterFocus = focusSubjects
-		return
-	}
-	if m.examCursor < 0 {
-		m.examCursor = m.examVisible[0]
-		return
-	}
-	if m.visibleIndex(m.examVisible, m.examCursor) == -1 {
-		m.examCursor = m.examVisible[0]
-	}
 }
 
 func (m *Model) sortProjectsByStatus() {
@@ -822,7 +948,7 @@ func (m *Model) sortExamsByPriority() {
 			m.examCursor = idx
 		}
 	}
-	m.refreshExamFilter()
+	m.refreshFlatExams()
 }
 
 func projectKey(items []models.ProjectItem, idx int) string {
@@ -883,51 +1009,6 @@ func priorityRank(priority string) int {
 	default:
 		return 3
 	}
-}
-
-func (m *Model) moveSemesterCursor(delta int) {
-	if m.semesterFocus == focusSubjects {
-		if len(m.subjects) == 0 {
-			return
-		}
-		m.selectedSubj += delta
-		if m.selectedSubj < 0 {
-			m.selectedSubj = 0
-		}
-		if m.selectedSubj >= len(m.subjects) {
-			m.selectedSubj = len(m.subjects) - 1
-		}
-		m.refreshExamFilter()
-		return
-	}
-
-	if len(m.examVisible) == 0 {
-		m.semesterFocus = focusSubjects
-		return
-	}
-	pos := m.visibleIndex(m.examVisible, m.examCursor)
-	if pos < 0 {
-		pos = 0
-	}
-	pos += delta
-	if pos < 0 {
-		pos = 0
-	}
-	if pos >= len(m.examVisible) {
-		pos = len(m.examVisible) - 1
-	}
-	m.examCursor = m.examVisible[pos]
-}
-
-func (m *Model) toggleSemesterFocus() {
-	if m.semesterFocus == focusSubjects {
-		if len(m.examVisible) == 0 {
-			return
-		}
-		m.semesterFocus = focusExams
-		return
-	}
-	m.semesterFocus = focusSubjects
 }
 
 func (m Model) tabItems() []components.TabItem {
