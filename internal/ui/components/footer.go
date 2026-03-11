@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/seman/internal/style"
 )
 
 // Tab ID constants kept in sync with app/model.go.
@@ -21,19 +21,19 @@ const (
 func tabHint(activeTab int) string {
 	switch activeTab {
 	case footerTabSubjects:
-		return "[S] Add subject  [E] Edit  [D] Delete  [Q] Quit"
+		return "[S] Add subject  [E] Edit  [D] Delete  [T] Today  [Q] Quit"
 	case footerTabExams:
-		return "[A] Add exam  [E] Edit  [D] Delete  [Tab] Switch focus  [G] Global  [Q] Quit"
+		return "[A] Add exam  [E] Edit  [D] Delete  [F] Filter  [R] Clear  [G] Global  [T] Today  [Q] Quit"
 	case footerTabTodos:
-		return "[N] Add todo  [E] Edit  [D] Delete  [Space] Toggle  [G] Global  [Q] Quit"
+		return "[N] Add  [B] Bulk add  [E] Edit  [D] Delete  [Space] Toggle  [F] Filter  [R] Clear  [G] Global  [T] Today  [Q] Quit"
 	case footerTabProjects:
-		return "[P] Add project  [E] Edit  [D] Delete  [Q] Quit"
+		return "[P] Add project  [E] Edit  [D] Delete  [F] Filter  [R] Clear  [T] Today  [Q] Quit"
 	case footerTabSettings:
-		return "[O] Toggle confirm  [W] Week span  [L] Lofi  [U] Lofi URL  [Q] Quit"
+		return "[T] Theme  [O] Confirm  [W] Week span  [L] Lofi  [U] Lofi URL  [Q] Quit"
 	case footerTabLofi:
 		return "[Enter] Play  [Space] Pause  [N] Next  [B] Prev  [X] Stop  [Q] Quit"
 	default: // Dashboard
-		return "[S] Add subject  [A] Add exam  [P] Add project  [G] Global  [Q] Quit"
+		return "[S] Subject  [A] Exam  [P] Project  [F] Filter  [R] Clear  [G] Global  [T] Today  [Q] Quit"
 	}
 }
 

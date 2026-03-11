@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/components"
+	"github.com/romanguyen/seman/internal/style"
+	"github.com/romanguyen/seman/internal/ui/components"
 )
 
-func RenderSettingsTab(width, height int, confirmOn bool, weekSpan int, lofiEnabled bool, lofiURL string, t style.Theme) string {
+func RenderSettingsTab(width, height int, confirmOn bool, weekSpan int, lofiEnabled bool, lofiURL string, themeName string, t style.Theme) string {
 	gap := 1
 	leftWidth := (width - gap) / 2
 	rightWidth := width - leftWidth - gap
@@ -26,11 +26,10 @@ func RenderSettingsTab(width, height int, confirmOn bool, weekSpan int, lofiEnab
 	}, "\n")
 
 	displayContentW := components.PanelContentWidth(leftWidth)
+	themeLabel := lipgloss.NewStyle().Foreground(t.Accent).Bold(true).Render("■") + " " + themeName
 	displayBody := strings.Join([]string{
+		components.AlignLine(displayContentW, t.Text.Render("Theme: "+themeLabel), t.Text.Render("[T] Cycle")),
 		components.AlignLine(displayContentW, t.Text.Render("Weeks visible: "+weekSpanLabel(weekSpan)), t.Text.Render("[W] Change")),
-		components.AlignLine(displayContentW, t.Text.Render("Date format: DD/MM/YYYY"), t.Text.Render("[F] Change")),
-		components.AlignLine(displayContentW, t.Text.Render("Time format: 24-hour"), t.Text.Render("[T] Toggle")),
-		components.AlignLine(displayContentW, t.Text.Render("Highlight urgent items: Yes"), t.Text.Render("[H] Toggle")),
 		components.AlignLine(displayContentW, t.Text.Render(fmt.Sprintf("Confirm deletions: %s", components.YesNo(confirmOn))), t.Text.Render("[O] Toggle")),
 		components.AlignLine(displayContentW, t.Text.Render(fmt.Sprintf("Lofi tab: %s", components.YesNo(lofiEnabled))), t.Text.Render("[L] Toggle")),
 		components.AlignLine(displayContentW, t.Text.Render("Lofi playlist: "+lofiURLLabel(lofiURL, displayContentW)), t.Text.Render("[U] Edit")),

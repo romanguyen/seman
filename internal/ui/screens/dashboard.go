@@ -2,25 +2,34 @@ package screens
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/components"
+	"github.com/romanguyen/seman/internal/style"
+	"github.com/romanguyen/seman/internal/ui/components"
 )
 
 func RenderDashboard(state State, width, height int, t style.Theme) string {
 	layout := components.ComputeDashboardLayout(width, height)
 
-	leftBody := components.RenderUpcomingExams(state.Subjects, 5, state.FilterStart, state.FilterEnd, state.FilterAll, t)
-	leftPanel := components.RenderPanel(layout.LeftWidth, layout.PanelHeight, "Upcoming Exams (Priority)", leftBody, t)
+	examTitle := "Upcoming Exams (Priority)"
+	todoTitle := "Todos"
+	projectTitle := "Projects (Soonest Deadlines)"
+	if state.SubjectFilter != "" {
+		examTitle = "Exams · " + state.SubjectFilter
+		todoTitle = "Todos · " + state.SubjectFilter
+		projectTitle = "Projects · " + state.SubjectFilter
+	}
+
+	leftBody := components.RenderUpcomingExams(state.Subjects, 5, state.FilterStart, state.FilterEnd, state.FilterAll, state.SubjectFilter, t)
+	leftPanel := components.RenderPanel(layout.LeftWidth, layout.PanelHeight, examTitle, leftBody, t)
 
 	if layout.MiddleWidth <= 0 {
 		return leftPanel
 	}
 
-	middlePanel := components.RenderPanel(layout.MiddleWidth, layout.PanelHeight, "Todos", state.ChecklistView, t)
+	middlePanel := components.RenderPanel(layout.MiddleWidth, layout.PanelHeight, todoTitle, state.ChecklistView, t)
 	if layout.RightWidth <= 0 {
 		return lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, " ", middlePanel)
 	}
 
-	rightPanel := components.RenderPanel(layout.RightWidth, layout.PanelHeight, "Projects (Soonest Deadlines)", components.RenderProjects(state.Projects, t), t)
+	rightPanel := components.RenderPanel(layout.RightWidth, layout.PanelHeight, projectTitle, components.RenderProjects(state.Projects, t), t)
 	return lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, " ", middlePanel, " ", rightPanel)
 }

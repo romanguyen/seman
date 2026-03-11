@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/app"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/storage"
+	"github.com/romanguyen/seman/internal/app"
+	"github.com/romanguyen/seman/internal/storage"
 )
 
 func main() {

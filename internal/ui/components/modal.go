@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
+	"github.com/romanguyen/seman/internal/style"
 )
 
 type ModalMode int
@@ -14,6 +14,7 @@ const (
 	ModalHidden ModalMode = iota
 	ModalForm
 	ModalConfirm
+	ModalSubjectSelect
 )
 
 type ModalField struct {
@@ -31,10 +32,24 @@ type ModalState struct {
 	DropdownItems    []string
 	DropdownCursor   int
 	DropdownFieldIdx int // index of the field that owns the dropdown; -1 if none
+	SelectItems      []string
+	SelectActive     []bool
+	SelectCursor     int
 }
 
 const dropdownPanelWidth = 18
 const dropdownMaxVisible = 8
+
+// RenderModalContent returns just the modal box (+ dropdown panel if active),
+// without padding it to fill the full area. Use with PlaceOverlay.
+func RenderModalContent(state ModalState, width int, t style.Theme) string {
+	modal := RenderModal(state, width, t)
+	if state.DropdownFieldIdx >= 0 && len(state.DropdownItems) > 0 {
+		dropdown := renderDropdownPanel(state, t)
+		return lipgloss.JoinHorizontal(lipgloss.Top, modal, " ", dropdown)
+	}
+	return modal
+}
 
 func RenderModalArea(state ModalState, width, height int, t style.Theme) string {
 	modal := RenderModal(state, width, t)
@@ -93,6 +108,34 @@ func RenderModal(state ModalState, width int, t style.Theme) string {
 		b.WriteString(t.Text.Render(state.Message))
 		b.WriteString("\n\n")
 		b.WriteString(t.ModalHint.Render(state.Hint))
+		return box.Render(b.String())
+	}
+
+	if state.Mode == ModalSubjectSelect {
+		b.WriteString("\n")
+		if len(state.SelectItems) == 0 {
+			b.WriteString(t.Dim.Render("No subjects available."))
+		} else {
+			for i, item := range state.SelectItems {
+				if i > 0 {
+					b.WriteString("\n")
+				}
+				checked := "[ ]"
+				if i < len(state.SelectActive) && state.SelectActive[i] {
+					checked = "[x]"
+				}
+				line := checked + " " + item
+				if i == state.SelectCursor {
+					b.WriteString(t.RowActive.Render(line))
+				} else {
+					b.WriteString(t.Text.Render(line))
+				}
+			}
+		}
+		if state.Hint != "" {
+			b.WriteString("\n\n")
+			b.WriteString(t.ModalHint.Render(state.Hint))
+		}
 		return box.Render(b.String())
 	}
 

@@ -2,8 +2,8 @@ package screens
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/style"
-	"github.com/romanguyen/KEK-keep-everything-kool/internal/ui/components"
+	"github.com/romanguyen/seman/internal/style"
+	"github.com/romanguyen/seman/internal/ui/components"
 )
 
 func RenderMain(state State, width, height int, t style.Theme) string {
@@ -11,13 +11,13 @@ func RenderMain(state State, width, height int, t style.Theme) string {
 	case 0: // tabDashboard
 		return RenderDashboard(state, width, height, t)
 	case 1: // tabExams
-		return RenderSemester(state, width, height, t)
+		return RenderExams(state, width, height, t)
 	case 2: // tabTodos
 		return RenderWeeklyFocus(state, width, height, t)
 	case 3: // tabProjects
 		return RenderProjectsTab(state, width, height, t)
 	case 4: // tabSettings
-		return RenderSettingsTab(width, height, state.ConfirmOn, state.WeekSpan, state.LofiEnabled, state.LofiURL, t)
+		return RenderSettingsTab(width, height, state.ConfirmOn, state.WeekSpan, state.LofiEnabled, state.LofiURL, state.ThemeName, t)
 	case 5: // tabLofi
 		return RenderLofi(state, width, height, t)
 	case 6: // tabSubjects
