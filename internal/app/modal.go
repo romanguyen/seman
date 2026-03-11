@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -18,6 +19,7 @@ const (
 	modalAddExam
 	modalAddProject
 	modalAddTodo
+	modalBulkAddTodo
 	modalEditSubject
 	modalEditExam
 	modalEditProject
@@ -115,12 +117,15 @@ func (m Model) updateModal(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "enter":
 			if m.modal == modalConfirm {
+				m.pushUndo()
 				m.applyConfirmAction()
 				m.closeModal()
 				return m, nil
 			}
 			if m.formFocus == len(m.formFields)-1 {
+				m.pushUndo()
 				if err := m.submitForm(); err != nil {
+					m.undoStack = m.undoStack[:len(m.undoStack)-1]
 					m.modalError = err.Error()
 					return m, nil
 				}
@@ -328,6 +333,19 @@ func (m *Model) openAddTodo() {
 		newFormField("Subject", inputWidth, false),
 	}
 	m.openFormModal(modalAddTodo, "Add Todo", fields)
+}
+
+func (m *Model) openBulkAddTodo() {
+	w := m.modalInputWidth()
+	fields := []formField{
+		newFormField("Task Name", w, true),
+		newFormField("Subject", w, false),
+		newFormField("Weeks", w, true),
+		newFormField("Start #", w, false),
+	}
+	fields[2].input.Placeholder = "e.g. 12"
+	fields[3].input.Placeholder = "1"
+	m.openFormModal(modalBulkAddTodo, "Bulk Add Todos", fields)
 }
 
 func (m *Model) openEditCurrent() {
@@ -547,6 +565,46 @@ func (m *Model) submitForm() error {
 			Due:     m.weekStart.Format("2006-01-02"),
 			Subject: subjectCode,
 		})
+		m.checklistCursor = len(m.checklistItems) - 1
+		m.sortChecklistByDone()
+		m.persist()
+		m.refreshChecklistView()
+	case modalBulkAddTodo:
+		baseName := strings.TrimSpace(m.formFields[0].input.Value())
+		subject := strings.TrimSpace(m.formFields[1].input.Value())
+		weeksStr := strings.TrimSpace(m.formFields[2].input.Value())
+		startStr := strings.TrimSpace(m.formFields[3].input.Value())
+		if baseName == "" {
+			return fmt.Errorf("Task Name is required.")
+		}
+		weeks, err := strconv.Atoi(weeksStr)
+		if err != nil || weeks < 1 {
+			return fmt.Errorf("Weeks must be a positive number.")
+		}
+		if weeks > 52 {
+			return fmt.Errorf("Weeks must be 52 or fewer.")
+		}
+		startNum := 1
+		if startStr != "" {
+			n, err := strconv.Atoi(startStr)
+			if err != nil || n < 1 {
+				return fmt.Errorf("Start # must be a positive number.")
+			}
+			startNum = n
+		}
+		if subject != "" && findSubjectIndex(m.subjects, subject) < 0 {
+			return fmt.Errorf("Subject not found.")
+		}
+		subjectCode := strings.ToUpper(subject)
+		for i := 0; i < weeks; i++ {
+			due := m.weekStart.AddDate(0, 0, i*7)
+			m.checklistItems = append(m.checklistItems, models.ChecklistItem{
+				Text:    fmt.Sprintf("%s - Week %d", baseName, startNum+i),
+				Done:    false,
+				Due:     due.Format("2006-01-02"),
+				Subject: subjectCode,
+			})
+		}
 		m.checklistCursor = len(m.checklistItems) - 1
 		m.sortChecklistByDone()
 		m.persist()

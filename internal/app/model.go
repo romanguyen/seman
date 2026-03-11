@@ -60,6 +60,7 @@ type Model struct {
 	editProjectIdx  int
 	editTodoIdx     int
 	store           storage.Store
+	undoStack       []undoSnapshot
 }
 
 const (
@@ -133,6 +134,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			m.shutdownLofi()
 			return m, tea.Quit
+		case "ctrl+z":
+			m.undo()
+			return m, nil
 		case "g", "G":
 			m.toggleGlobalView()
 			return m, nil
@@ -191,6 +195,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cycleTheme()
 				return m, nil
 			}
+			m.jumpToCurrentWeek()
+			return m, nil
 		case "w", "W":
 			if m.activeTab == tabSettings {
 				m.cycleWeekSpan()
@@ -224,6 +230,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			case " ", "enter", "x", "X":
 				m.toggleChecklistItem()
+				return m, nil
+			case "b", "B":
+				m.openBulkAddTodo()
 				return m, nil
 			}
 
@@ -545,6 +554,7 @@ func (m *Model) toggleChecklistItem() {
 	if idx < 0 || idx >= len(m.checklistItems) {
 		return
 	}
+	m.pushUndo()
 	m.checklistItems[idx].Done = !m.checklistItems[idx].Done
 	m.sortChecklistByDone()
 	m.persist()
@@ -565,6 +575,14 @@ func (m *Model) setWeekStartFromData(value string) {
 
 func (m *Model) shiftWeek(delta int) {
 	m.weekStart = m.weekStart.AddDate(0, 0, delta*7)
+	m.updateWeekLabel()
+	m.refreshFlatExams()
+	m.refreshChecklistView()
+	m.persist()
+}
+
+func (m *Model) jumpToCurrentWeek() {
+	m.weekStart = weekStartOf(time.Now())
 	m.updateWeekLabel()
 	m.refreshFlatExams()
 	m.refreshChecklistView()
