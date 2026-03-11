@@ -12,6 +12,8 @@ Make sure `$GOPATH/bin` is in your PATH (one-time setup):
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
+go install github.com/romanguyen/seman/cmd/seman@release
+
 ```
 
 Or build from source:
@@ -43,73 +45,79 @@ go run ./cmd/seman
 
 ## Tabs
 
-| Key | Tab |
-|-----|-----|
+| Key | Tab                                                        |
+| --- | ---------------------------------------------------------- |
 | `1` | Dashboard — overview of upcoming exams, todos and projects |
-| `2` | Exams — manage subjects and their exams |
-| `3` | Todos — weekly checklist |
-| `4` | Projects — track assignments |
-| `5` | Settings |
-| `6` | Subjects — dedicated subject management |
-| `7` | Lofi — music player (requires lofi enabled in Settings) |
+| `2` | Exams — manage subjects and their exams                    |
+| `3` | Todos — weekly checklist                                   |
+| `4` | Projects — track assignments                               |
+| `5` | Settings                                                   |
+| `6` | Subjects — dedicated subject management                    |
+| `7` | Lofi — music player (requires lofi enabled in Settings)    |
 
 ## Global keys
 
-| Key | Action |
-|-----|--------|
-| `S` | Add subject |
-| `A` | Add exam |
-| `P` | Add project |
-| `E` | Edit selected item |
-| `D` | Delete selected item |
-| `G` | Toggle global view (all weeks) / weekly view |
-| `←` `→` | Previous / next week |
-| `1`–`7` | Switch tabs |
-| `Q` | Quit |
+| Key     | Action                                       |
+| ------- | -------------------------------------------- |
+| `S`     | Add subject                                  |
+| `A`     | Add exam                                     |
+| `P`     | Add project                                  |
+| `E`     | Edit selected item                           |
+| `D`     | Delete selected item                         |
+| `G`     | Toggle global view (all weeks) / weekly view |
+| `←` `→` | Previous / next week                         |
+| `1`–`7` | Switch tabs                                  |
+| `Q`     | Quit                                         |
 
 ## Per-tab keys
 
 ### Subjects (`6`)
-| Key | Action |
-|-----|--------|
-| `j` / `k` | Navigate |
-| `Enter` | Edit selected / add if empty |
+
+| Key       | Action                       |
+| --------- | ---------------------------- |
+| `j` / `k` | Navigate                     |
+| `Enter`   | Edit selected / add if empty |
 
 ### Exams (`2`)
-| Key | Action |
-|-----|--------|
-| `j` / `k` | Navigate |
-| `Tab` | Switch focus between subjects and exams |
+
+| Key       | Action                                  |
+| --------- | --------------------------------------- |
+| `j` / `k` | Navigate                                |
+| `Tab`     | Switch focus between subjects and exams |
 
 ### Todos (`3`)
-| Key | Action |
-|-----|--------|
-| `j` / `k` | Navigate |
+
+| Key                     | Action      |
+| ----------------------- | ----------- |
+| `j` / `k`               | Navigate    |
 | `Space` / `Enter` / `X` | Toggle done |
-| `N` | Add todo |
+| `N`                     | Add todo    |
 
 ### Projects (`4`)
-| Key | Action |
-|-----|--------|
+
+| Key       | Action   |
+| --------- | -------- |
 | `j` / `k` | Navigate |
 
 ### Settings (`5`)
-| Key | Action |
-|-----|--------|
-| `O` | Toggle delete confirmation |
+
+| Key | Action                                |
+| --- | ------------------------------------- |
+| `O` | Toggle delete confirmation            |
 | `W` | Cycle week span (1 → 2 → 3 → 4 → all) |
-| `L` | Toggle lofi player |
-| `U` | Set lofi playlist URL |
+| `L` | Toggle lofi player                    |
+| `U` | Set lofi playlist URL                 |
 
 ### Lofi (`7`)
-| Key | Action |
-|-----|--------|
+
+| Key       | Action            |
+| --------- | ----------------- |
 | `j` / `k` | Navigate playlist |
-| `Enter` | Play selected |
-| `Space` | Pause / resume |
-| `N` | Next track |
-| `B` | Previous track |
-| `X` | Stop |
+| `Enter`   | Play selected     |
+| `Space`   | Pause / resume    |
+| `N`       | Next track        |
+| `B`       | Previous track    |
+| `X`       | Stop              |
 
 ## Subject autocomplete
 
